@@ -1,7 +1,8 @@
 {
-  "name": "ecoleta",
+  "name": "coleta-certa",
   "version": "1.0.0",
   "main": "index.ts",
+  "description": "Aplicativo mobile para acompanhar coletas e descarte correto de resíduos.",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,6 +10,10 @@
     "web": "expo start --web",
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:luisfelypehoffmanndev/Coleta-Certa.git"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
