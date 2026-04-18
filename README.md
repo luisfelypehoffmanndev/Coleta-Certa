@@ -1,18 +1,19 @@
 # Coleta Certa
 
-Aplicativo mobile em `Expo + React Native + TypeScript` para acompanhar coletas urbanas, orientar a separação correta dos resíduos e destacar pontos de descarte eletrônico.
+Aplicativo mobile desenvolvido com `Expo`, `React Native` e `TypeScript` para centralizar informações de coleta urbana, calendário de resíduos, orientações de reciclagem e pontos de descarte.
 
-## Visão geral
+## Sobre
 
-O projeto foi estruturado como um MVP mobile com foco em utilidade pública:
-- tela inicial com próxima coleta e agenda resumida;
-- calendário mensal de coletas;
-- dicas rápidas de reciclagem;
-- pontos de descarte eletrônico;
-- preferências locais por bairro e antecedência de lembrete;
-- autenticação simulada com sessão persistida.
+O Coleta Certa foi projetado para oferecer uma experiência simples e rápida para consulta de coletas e descarte responsável. A interface prioriza leitura imediata, navegação curta e organização visual inspirada em um fluxo mobile utilitário.
 
-A interface atual foi alinhada à identidade visual do Figma de referência, mantendo a implementação em `React Native` com `StyleSheet` e sem introduzir bibliotecas visuais extras.
+## Principais funcionalidades
+
+- tela inicial com destaque para a próxima coleta;
+- calendário mensal com identificação por tipo de resíduo;
+- seção de orientações rápidas sobre separação e reciclagem;
+- consulta de pontos de descarte;
+- preferências persistidas localmente;
+- testes automatizados para fluxos principais e regras de domínio.
 
 ## Stack
 
@@ -20,19 +21,10 @@ A interface atual foi alinhada à identidade visual do Figma de referência, man
 - `React Native`
 - `TypeScript`
 - `Jest`
-- `Testing Library`
+- `@testing-library/react-native`
 - `zod`
 
-## Funcionalidades atuais
-
-- login demo com sessão local persistida;
-- agenda de coleta baseada em dados mockados;
-- telas de `Início`, `Calendário`, `Dicas` e `Config`;
-- preferências salvas com `AsyncStorage`;
-- sessão protegida com `SecureStore`;
-- testes automatizados para domínio, autenticação e fluxos principais da interface.
-
-## Rodando localmente
+## Executando o projeto
 
 ```bash
 npm install
@@ -41,7 +33,7 @@ npm run test
 npm start
 ```
 
-Atalhos úteis:
+Comandos auxiliares:
 
 ```bash
 npm run android
@@ -49,49 +41,29 @@ npm run ios
 npm run web
 ```
 
-## Conta demo
+## Estrutura do projeto
 
-- e-mail: `felipe@ecoleta.app`
-- senha: `ecoleta123`
-
-## Estrutura
-
-- `src/screens`: telas e composição da UI.
-- `src/domain`: regras de negócio, contratos e schemas.
-- `src/data`: fixtures e mocks do piloto.
-- `src/hooks`: bootstrap de sessão e dados.
-- `src/services`: persistência local e acesso a mocks.
-- `src/theme`: tokens visuais.
-- `src/ui`: estilos compartilhados.
-- `docs`: arquitetura, design, testes e segurança.
-
-## Design
-
-- `Início`, `Calendário` e `Dicas` seguem a identidade visual do arquivo Figma `Coleta certa`.
-- O app usa fundo claro, verde como cor primária e cards de leitura rápida.
-- O calendário foi redesenhado para refletir a composição visual do frame de setembro de 2026.
-
-Mais contexto em [docs/design-system.md](/home/felype/ecoleta/docs/design-system.md).
+- `src/screens`: telas da aplicação
+- `src/domain`: regras de negócio e contratos
+- `src/data`: dados mockados e fixtures
+- `src/hooks`: orquestração de estado e carregamento
+- `src/services`: persistência e acesso a dados
+- `src/theme`: tokens de design
+- `src/ui`: estilos compartilhados
+- `docs`: documentação técnica complementar
 
 ## Qualidade
 
-Validação local usada nesta versão:
+Para validar a aplicação localmente:
 
 ```bash
 npm run typecheck
 npm test
 ```
 
-## Limitações atuais
+## Documentação complementar
 
-- backend ainda não conectado;
-- notificações push ainda não integradas;
-- dados de coletas e ecopontos ainda são mockados;
-- autenticação ainda não usa API real.
-
-## Próximos passos
-
-1. Conectar autenticação e cronogramas a uma API real.
-2. Evoluir o fluxo de notificações por bairro e tipo de resíduo.
-3. Integrar dados reais de ecopontos.
-4. Refinar acessibilidade, ícones e estados offline.
+- [Design system](./docs/design-system.md)
+- [Testing](./docs/testing.md)
+- [Security](./docs/security.md)
+- [ADR da stack](./docs/adr/0001-stack.md)
