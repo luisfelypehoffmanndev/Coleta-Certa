@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 
-import { mergeUserPreferences } from '../domain/preferences';
 import { loadUserPreferences, saveUserPreferences } from '../services/preferencesStorage';
 import {
   fetchCollectionSchedules,
   fetchDisposalLocations,
-  fetchPilotUser,
   fetchServiceAlerts,
 } from '../services/mockApi';
 import type {
+  AuthSession,
   CollectionSchedule,
   DisposalLocation,
   Neighborhood,
   ServiceAlert,
+  UserPreferences,
   UserProfile,
 } from '../domain/types';
 
@@ -34,20 +34,42 @@ const initialState: EcoletaDataState = {
   isSavingPreferences: false,
 };
 
-export function useEcoletaData() {
+function buildUserFromSession(
+  session: AuthSession,
+  savedPreferences: Partial<UserPreferences> | null,
+): UserProfile {
+  return {
+    id: session.userId,
+    name: session.displayName || session.email,
+    email: session.email,
+    city: 'Santo Ângelo',
+    neighborhood: savedPreferences?.neighborhood ?? 'Centro',
+    notificationLeadHours: savedPreferences?.notificationLeadHours ?? 12,
+    notificationsEnabled: savedPreferences?.notificationsEnabled ?? false,
+  };
+}
+
+export function useEcoletaData(session: AuthSession | null) {
   const [state, setState] = useState<EcoletaDataState>(initialState);
 
   useEffect(() => {
     let mounted = true;
 
     async function load() {
-      const [user, collectionSchedules, disposalLocations, serviceAlerts, savedPreferences] =
+      if (!session) {
+        setState({
+          ...initialState,
+          isLoading: false,
+        });
+        return;
+      }
+
+      const [collectionSchedules, disposalLocations, serviceAlerts, savedPreferences] =
         await Promise.all([
-          fetchPilotUser(),
           fetchCollectionSchedules(),
           fetchDisposalLocations(),
           fetchServiceAlerts(),
-          loadUserPreferences(),
+          loadUserPreferences(session.userId),
         ]);
 
       if (!mounted) {
@@ -55,7 +77,7 @@ export function useEcoletaData() {
       }
 
       setState({
-        user: mergeUserPreferences(user, savedPreferences),
+        user: buildUserFromSession(session, savedPreferences),
         collectionSchedules,
         disposalLocations,
         serviceAlerts,
@@ -75,7 +97,7 @@ export function useEcoletaData() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [session]);
 
   async function updatePreferences(
     neighborhood: Neighborhood,
@@ -98,9 +120,40 @@ export function useEcoletaData() {
     }));
 
     try {
-      await saveUserPreferences({
+      await saveUserPreferences(nextUser.id, {
         neighborhood,
         notificationLeadHours,
+        notificationsEnabled: nextUser.notificationsEnabled,
+      });
+    } finally {
+      setState((current) => ({
+        ...current,
+        isSavingPreferences: false,
+      }));
+    }
+  }
+
+  async function updateNotificationsEnabled(notificationsEnabled: boolean) {
+    if (!state.user) {
+      return;
+    }
+
+    const nextUser = {
+      ...state.user,
+      notificationsEnabled,
+    };
+
+    setState((current) => ({
+      ...current,
+      user: nextUser,
+      isSavingPreferences: true,
+    }));
+
+    try {
+      await saveUserPreferences(nextUser.id, {
+        neighborhood: nextUser.neighborhood,
+        notificationLeadHours: nextUser.notificationLeadHours,
+        notificationsEnabled,
       });
     } finally {
       setState((current) => ({
@@ -113,5 +166,6 @@ export function useEcoletaData() {
   return {
     ...state,
     updatePreferences,
+    updateNotificationsEnabled,
   };
 }

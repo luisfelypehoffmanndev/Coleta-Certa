@@ -15,10 +15,8 @@ export const colors = {
   info: '#2563EB',
   warning: '#F59E0B',
   waste: {
-    general: '#F4F4F4',
-    recyclable: '#CFFAFE',
-    organic: '#FEF3C7',
-    electronic: '#FEE2E2',
+    wet: '#FEF3C7',
+    dry: '#CFFAFE',
   },
 };
 
@@ -44,10 +42,8 @@ export const typography = {
 };
 
 export const iconLabels = {
-  organic: 'OR',
-  recyclable: 'RC',
-  electronic: 'EL',
-  general: 'CM',
+  wet: 'UM',
+  dry: 'SE',
 };
 
 export const radii = {

@@ -13,3 +13,11 @@ export function validateLoginInput(email: string, password: string) {
 
   return null;
 }
+
+export function validateSignUpInput(name: string, email: string, password: string) {
+  if (name.trim().length < 2) {
+    return 'Informe seu nome.';
+  }
+
+  return validateLoginInput(email, password);
+}

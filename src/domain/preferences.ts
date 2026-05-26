@@ -19,5 +19,7 @@ export function mergeUserPreferences(
     neighborhood: preferences.neighborhood ?? user.neighborhood,
     notificationLeadHours:
       preferences.notificationLeadHours ?? user.notificationLeadHours,
+    notificationsEnabled:
+      preferences.notificationsEnabled ?? user.notificationsEnabled,
   };
 }

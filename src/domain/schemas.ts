@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import { wasteTypes } from './types';
+import { neighborhoods, wasteTypes } from './types';
 
 export const wasteTypeSchema = z.enum(wasteTypes);
-export const neighborhoodSchema = z.enum(['Centro', 'Jardim das Flores', 'Vila Esperanca']);
+export const neighborhoodSchema = z.enum(neighborhoods);
 
 export const userProfileSchema = z.object({
   id: z.string().min(1),
@@ -12,6 +12,7 @@ export const userProfileSchema = z.object({
   city: z.string().min(2),
   neighborhood: neighborhoodSchema,
   notificationLeadHours: z.number().int().min(1).max(48),
+  notificationsEnabled: z.boolean(),
 });
 
 export const collectionScheduleSchema = z.object({

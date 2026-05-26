@@ -8,9 +8,11 @@ Mesmo sendo um MVP, o projeto já separa dados de sessão, preferências locais 
 
 - validação de estruturas de dados com `zod`;
 - separação entre domínio e apresentação;
+- autenticação real com Firebase Auth por email e senha;
 - persistência de sessão com `SecureStore`;
-- persistência de preferências não sensíveis com `AsyncStorage`.
+- persistência de preferências não sensíveis com `AsyncStorage`;
+- notificações locais ativadas somente por escolha do usuário.
 
 ## Observações
 
-Atualmente a aplicação opera com dados locais e fluxos simulados. Qualquer evolução para autenticação real, backend remoto ou recursos administrativos deve incluir revisão específica de segurança, gestão de segredos e controle de acesso.
+Atualmente a aplicação autentica com Firebase Auth e mantém dados de coleta/preferências locais. Qualquer evolução para backend remoto, Firestore, notificações push remotas ou recursos administrativos deve incluir revisão específica de regras de segurança, gestão de segredos e controle de acesso.

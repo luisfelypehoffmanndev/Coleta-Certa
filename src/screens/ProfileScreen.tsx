@@ -1,23 +1,60 @@
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getLeadHourOptions } from '../domain/preferences';
 import { neighborhoods } from '../domain/types';
 import { appStyles as styles } from '../ui/styles';
+import type { NotificationPermissionStatus, ScheduledReminder } from '../services/notifications';
 import type { UserProfile } from '../domain/types';
+
+const officialCollectionPage =
+  'https://pmsantoangelo.abase.com.br/site/conteudos/5173-coleta-seletiva';
 
 interface ProfileScreenProps {
   user: UserProfile;
   isSavingPreferences: boolean;
+  notificationPermissionStatus: NotificationPermissionStatus;
+  scheduledReminder: ScheduledReminder | null;
+  isSchedulingNotification: boolean;
+  hasSchedulableCollection: boolean;
+  notificationError: string | null;
   onNeighborhoodChange: (value: UserProfile['neighborhood']) => void;
   onLeadHoursChange: (value: UserProfile['notificationLeadHours']) => void;
+  onNotificationsEnabledChange: (value: UserProfile['notificationsEnabled']) => void;
   onSignOut: () => void;
+}
+
+function formatReminderDate(dateIso: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(dateIso));
+}
+
+function permissionLabel(status: NotificationPermissionStatus) {
+  if (status === 'granted') {
+    return 'Permissão concedida';
+  }
+
+  if (status === 'denied') {
+    return 'Permissão negada';
+  }
+
+  return 'Aguardando permissão';
 }
 
 export function ProfileScreen({
   user,
   isSavingPreferences,
+  notificationPermissionStatus,
+  scheduledReminder,
+  isSchedulingNotification,
+  hasSchedulableCollection,
+  notificationError,
   onNeighborhoodChange,
   onLeadHoursChange,
+  onNotificationsEnabledChange,
   onSignOut,
 }: ProfileScreenProps) {
   return (
@@ -93,15 +130,68 @@ export function ProfileScreen({
 
       <View style={styles.section}>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Segurança e confiança</Text>
+          <Text style={styles.sectionTitle}>Notificações</Text>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: user.notificationsEnabled }}
+            onPress={() => onNotificationsEnabledChange(!user.notificationsEnabled)}
+            style={styles.preferenceToggleRow}
+          >
+            <View style={styles.legendMetaBlock}>
+              <Text style={styles.bodyStrong}>Receber lembretes de coleta</Text>
+              <Text style={styles.meta}>
+                {user.notificationsEnabled ? 'Lembretes ligados' : 'Lembretes desligados'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.toggleTrack,
+                user.notificationsEnabled && styles.toggleTrackActive,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  user.notificationsEnabled && styles.toggleThumbActive,
+                ]}
+              />
+            </View>
+          </Pressable>
+          <Text style={styles.body}>{permissionLabel(notificationPermissionStatus)}</Text>
           <Text style={styles.body}>
-            Login obrigatório, controle de acesso por papel e auditoria ficam previstos desde a base.
+            {!user.notificationsEnabled
+              ? 'Ative os lembretes para agendar notificações da próxima coleta.'
+              : !hasSchedulableCollection
+                ? 'Sem agenda local confirmada para este bairro.'
+              : scheduledReminder
+              ? `Próximo lembrete: ${formatReminderDate(scheduledReminder.scheduledAt)}`
+              : isSchedulingNotification
+                ? 'Agendando lembrete da próxima coleta...'
+                : 'Nenhum lembrete agendado ainda.'}
+          </Text>
+          <Text style={styles.sectionBody}>
+            O app agenda automaticamente um lembrete local para a próxima coleta do seu bairro,
+            respeitando a antecedência escolhida.
+          </Text>
+          {notificationError ? <Text style={styles.errorText}>{notificationError}</Text> : null}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Fonte dos dados</Text>
+          <Text style={styles.body}>
+            Os conteúdos seguem a página oficial de Coleta Seletiva da Prefeitura de Santo Ângelo.
           </Text>
           <Text style={styles.body}>
-            Contratos de dados são validados com schema para evitar payloads inconsistentes.
+            Para horário exato, consulte o mapa oficial por endereço e confirme o setor colorido.
           </Text>
-          <Pressable accessibilityRole="button" style={styles.buttonSecondary}>
-            <Text style={styles.buttonSecondaryText}>Ver documentação no repositório</Text>
+          <Pressable
+            accessibilityRole="link"
+            style={styles.buttonSecondary}
+            onPress={() => Linking.openURL(officialCollectionPage)}
+          >
+            <Text style={styles.buttonSecondaryText}>Página oficial da coleta seletiva</Text>
           </Pressable>
           <Pressable accessibilityRole="button" style={styles.signOutButton} onPress={onSignOut}>
             <Text style={styles.signOutButtonText}>Sair da conta</Text>

@@ -34,10 +34,8 @@ function toIso(date: Date) {
 
 export function getWasteLabel(type: WasteType) {
   const labels: Record<WasteType, string> = {
-    general: 'Lixo comum',
-    recyclable: 'Lixo Reciclável (Seco)',
-    organic: 'Lixo Orgânico',
-    electronic: 'Lixo Eletrônico',
+    wet: 'Lixo Úmido (não reciclável)',
+    dry: 'Lixo Seco (reciclável)',
   };
 
   return labels[type];

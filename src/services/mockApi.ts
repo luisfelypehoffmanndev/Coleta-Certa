@@ -4,34 +4,7 @@ import {
   serviceAlertSchema,
   userProfileSchema,
 } from '../domain/schemas';
-import { validateLoginInput } from '../domain/auth';
-import { collectionSchedules, disposalLocations, pilotCredentials, pilotUser, serviceAlerts } from '../data/mockData';
-import type { AuthSession } from '../domain/types';
-
-export class AuthError extends Error {}
-
-export async function loginWithPassword(
-  email: string,
-  password: string,
-): Promise<AuthSession> {
-  const validationError = validateLoginInput(email, password);
-
-  if (validationError) {
-    throw new AuthError(validationError);
-  }
-
-  if (
-    email.trim().toLowerCase() !== pilotCredentials.email ||
-    password !== pilotCredentials.password
-  ) {
-    throw new AuthError('E-mail ou senha inválidos.');
-  }
-
-  return {
-    token: 'mock-session-token',
-    userId: pilotUser.id,
-  };
-}
+import { collectionSchedules, disposalLocations, pilotUser, serviceAlerts } from '../data/mockData';
 
 export async function fetchPilotUser() {
   return userProfileSchema.parse(pilotUser);

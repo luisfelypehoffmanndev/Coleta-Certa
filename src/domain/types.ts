@@ -1,10 +1,41 @@
-export const wasteTypes = ['general', 'recyclable', 'organic', 'electronic'] as const;
+export const wasteTypes = ['wet', 'dry'] as const;
 
 export type WasteType = (typeof wasteTypes)[number];
 
-export type Neighborhood = 'Centro' | 'Jardim das Flores' | 'Vila Esperanca';
+export type Neighborhood =
+  | 'Centro'
+  | 'Casaroto'
+  | 'Jardim das Palmeiras'
+  | 'Jardim Residencial Sabo'
+  | 'Kurtz'
+  | 'Sossego (Centro Sul)'
+  | 'Wilde'
+  | 'Hortencia'
+  | 'Missoes'
+  | 'Olavo Reis'
+  | 'Padoim'
+  | 'Residencial Ipanema'
+  | 'Rosani'
+  | 'Sanches'
+  | 'Sao Carlos';
 
-export const neighborhoods: Neighborhood[] = ['Centro', 'Jardim das Flores', 'Vila Esperanca'];
+export const neighborhoods: Neighborhood[] = [
+  'Centro',
+  'Casaroto',
+  'Jardim das Palmeiras',
+  'Jardim Residencial Sabo',
+  'Kurtz',
+  'Sossego (Centro Sul)',
+  'Wilde',
+  'Hortencia',
+  'Missoes',
+  'Olavo Reis',
+  'Padoim',
+  'Residencial Ipanema',
+  'Rosani',
+  'Sanches',
+  'Sao Carlos',
+];
 
 export interface UserProfile {
   id: string;
@@ -13,16 +44,20 @@ export interface UserProfile {
   city: string;
   neighborhood: Neighborhood;
   notificationLeadHours: number;
+  notificationsEnabled: boolean;
 }
 
 export interface UserPreferences {
   neighborhood: Neighborhood;
   notificationLeadHours: number;
+  notificationsEnabled: boolean;
 }
 
 export interface AuthSession {
-  token: string;
   userId: string;
+  email: string;
+  displayName: string;
+  token?: string;
 }
 
 export interface CollectionSchedule {

@@ -12,7 +12,9 @@ Os testes cobrem principalmente:
 - ordenação e cálculo de próximas coletas;
 - validação de dados com schema;
 - persistência de preferências;
-- fluxo principal de navegação da aplicação.
+- fluxo principal de navegação da aplicação;
+- fallback para mapa oficial quando não há agenda local;
+- ativação de lembretes de coleta no perfil.
 
 ## Execução
 
@@ -31,3 +33,7 @@ npm run typecheck
 - `Jest`
 - `jest-expo`
 - `@testing-library/react-native`
+
+## Observações
+
+As APIs nativas de notificação são mockadas em `jest.setup.ts`. Os testes validam o fluxo de ativação e estados de interface; entrega real de notificação deve ser validada em aparelho físico ou development build.

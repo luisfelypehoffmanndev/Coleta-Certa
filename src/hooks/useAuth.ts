@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 
-import { loginWithPassword } from '../services/mockApi';
+import {
+  signInWithPassword,
+  signOut as signOutFirebase,
+  signUpWithPassword,
+  subscribeToAuthState,
+} from '../services/authService';
 import { clearSession, loadSession, saveSession } from '../services/sessionStorage';
-import type { AuthSession } from '../domain/types';
+import { saveUserPreferences } from '../services/preferencesStorage';
+import type { AuthSession, Neighborhood } from '../domain/types';
 
 interface AuthState {
   session: AuthSession | null;
@@ -26,7 +32,7 @@ export function useAuth() {
 
     loadSession()
       .then((session) => {
-        if (!mounted) {
+        if (!mounted || !session) {
           return;
         }
 
@@ -37,19 +43,24 @@ export function useAuth() {
           error: null,
         });
       })
-      .catch(() => {
-        if (!mounted) {
-          return;
-        }
+      .catch(() => undefined);
 
-        setState((current) => ({
-          ...current,
-          isLoading: false,
-        }));
-      });
+    const unsubscribe = subscribeToAuthState((session) => {
+      if (!mounted) {
+        return;
+      }
+
+      setState((current) => ({
+        session: session ?? current.session,
+        isLoading: false,
+        isSubmitting: false,
+        error: null,
+      }));
+    });
 
     return () => {
       mounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -61,7 +72,7 @@ export function useAuth() {
     }));
 
     try {
-      const session = await loginWithPassword(email, password);
+      const session = await signInWithPassword(email, password);
       await saveSession(session);
 
       setState({
@@ -79,7 +90,39 @@ export function useAuth() {
     }
   }
 
+  async function signUp(name: string, email: string, password: string, neighborhood: Neighborhood) {
+    setState((current) => ({
+      ...current,
+      isSubmitting: true,
+      error: null,
+    }));
+
+    try {
+      const session = await signUpWithPassword(name, email, password);
+      await saveUserPreferences(session.userId, {
+        neighborhood,
+        notificationLeadHours: 12,
+        notificationsEnabled: false,
+      });
+      await saveSession(session);
+
+      setState({
+        session,
+        isLoading: false,
+        isSubmitting: false,
+        error: null,
+      });
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        isSubmitting: false,
+        error: error instanceof Error ? error.message : 'Não foi possível criar a conta.',
+      }));
+    }
+  }
+
   async function signOut() {
+    await signOutFirebase();
     await clearSession();
 
     setState({
@@ -93,6 +136,7 @@ export function useAuth() {
   return {
     ...state,
     signIn,
+    signUp,
     signOut,
   };
 }

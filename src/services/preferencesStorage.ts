@@ -3,14 +3,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { neighborhoodSchema } from '../domain/schemas';
 import type { UserPreferences } from '../domain/types';
 
-const storageKey = 'ecoleta:user-preferences';
+function getStorageKey(userId: string) {
+  return `ecoleta:user-preferences:${userId}`;
+}
 
 function isLeadHours(value: unknown): value is UserPreferences['notificationLeadHours'] {
   return value === 6 || value === 12 || value === 24;
 }
 
-export async function loadUserPreferences(): Promise<Partial<UserPreferences> | null> {
-  const raw = await AsyncStorage.getItem(storageKey);
+export async function loadUserPreferences(userId: string): Promise<Partial<UserPreferences> | null> {
+  const raw = await AsyncStorage.getItem(getStorageKey(userId));
 
   if (!raw) {
     return null;
@@ -20,6 +22,7 @@ export async function loadUserPreferences(): Promise<Partial<UserPreferences> | 
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const neighborhood = parsed.neighborhood;
     const notificationLeadHours = parsed.notificationLeadHours;
+    const notificationsEnabled = parsed.notificationsEnabled;
 
     return {
       neighborhood:
@@ -29,12 +32,14 @@ export async function loadUserPreferences(): Promise<Partial<UserPreferences> | 
       notificationLeadHours: isLeadHours(notificationLeadHours)
         ? notificationLeadHours
         : undefined,
+      notificationsEnabled:
+        typeof notificationsEnabled === 'boolean' ? notificationsEnabled : undefined,
     };
   } catch {
     return null;
   }
 }
 
-export async function saveUserPreferences(preferences: UserPreferences) {
-  await AsyncStorage.setItem(storageKey, JSON.stringify(preferences));
+export async function saveUserPreferences(userId: string, preferences: UserPreferences) {
+  await AsyncStorage.setItem(getStorageKey(userId), JSON.stringify(preferences));
 }

@@ -1,72 +1,32 @@
-import { Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 import { appStyles as styles } from '../ui/styles';
 import { colors, iconLabels } from '../theme/tokens';
-import type { CollectionSchedule, UpcomingCollection, UserProfile, WasteType } from '../domain/types';
+import { getWasteLabel } from '../domain/schedule';
+import type { CollectionSchedule, UserProfile, WasteType } from '../domain/types';
 
 interface CalendarScreenProps {
   user: UserProfile;
   collectionSchedules: CollectionSchedule[];
-  upcomingCollections: UpcomingCollection[];
+  referenceDate: Date;
 }
 
 const weekdayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const monthLabel = 'Setembro de 2026';
 
-const calendarRows: Array<Array<{ dayNumber: number; inMonth: boolean; wasteType?: WasteType }>> = [
-  [
-    { dayNumber: 0, inMonth: false },
-    { dayNumber: 0, inMonth: false },
-    { dayNumber: 1, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 2, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 3, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 4, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 5, inMonth: true, wasteType: 'recyclable' },
-  ],
-  [
-    { dayNumber: 6, inMonth: true, wasteType: 'general' },
-    { dayNumber: 7, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 8, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 9, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 10, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 11, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 12, inMonth: true, wasteType: 'recyclable' },
-  ],
-  [
-    { dayNumber: 13, inMonth: true, wasteType: 'general' },
-    { dayNumber: 14, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 15, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 16, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 17, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 18, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 19, inMonth: true, wasteType: 'recyclable' },
-  ],
-  [
-    { dayNumber: 20, inMonth: true, wasteType: 'general' },
-    { dayNumber: 21, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 22, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 23, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 24, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 25, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 26, inMonth: true, wasteType: 'recyclable' },
-  ],
-  [
-    { dayNumber: 27, inMonth: true, wasteType: 'general' },
-    { dayNumber: 28, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 29, inMonth: true, wasteType: 'recyclable' },
-    { dayNumber: 30, inMonth: true, wasteType: 'organic' },
-    { dayNumber: 0, inMonth: false },
-    { dayNumber: 0, inMonth: false },
-    { dayNumber: 0, inMonth: false },
-  ],
-];
+interface CalendarDay {
+  date: Date;
+  dayNumber: number;
+  inMonth: boolean;
+  wasteType?: WasteType;
+}
 
 function dayTextStyle(type?: WasteType) {
-  if (type === 'organic') {
+  if (type === 'wet') {
     return { color: '#92400E' };
   }
 
-  if (type === 'recyclable') {
+  if (type === 'dry') {
     return { color: '#0891B2' };
   }
 
@@ -74,41 +34,119 @@ function dayTextStyle(type?: WasteType) {
 }
 
 function markerStyle(type?: WasteType) {
-  if (type === 'organic') {
+  if (type === 'wet') {
     return { color: '#92400E' };
   }
 
-  if (type === 'recyclable') {
+  if (type === 'dry') {
     return { color: '#0891B2' };
-  }
-
-  if (type === 'electronic') {
-    return { color: '#DC2626' };
   }
 
   return { color: '#747474' };
 }
 
+function getWasteTextStyle(type: WasteType) {
+  if (type === 'dry') {
+    return styles.wasteBadgeTextCyan;
+  }
+
+  return undefined;
+}
+
 function legendDetails(schedules: CollectionSchedule[], neighborhood: UserProfile['neighborhood']) {
   const filtered = schedules.filter((item) => item.neighborhood === neighborhood);
 
-  const organicDays = filtered.filter((item) => item.wasteType === 'organic').length
-    ? 'Segunda, Quarta, Sexta - 07:00'
+  const wetDays = filtered.filter((item) => item.wasteType === 'wet').length
+    ? 'Conforme setor no mapa oficial - a partir das 10:00'
     : 'Coleta programada';
-  const recyclableDays = filtered.filter((item) => item.wasteType === 'recyclable').length
-    ? 'Terça, Quinta, Sábado - 07:00'
+  const dryDays = filtered.filter((item) => item.wasteType === 'dry').length
+    ? 'Conforme setor no mapa oficial - a partir das 10:00'
     : 'Coleta programada';
 
-  return { organicDays, recyclableDays };
+  return { wetDays, dryDays };
+}
+
+function addMonths(date: Date, delta: number) {
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+}
+
+function getMonthLabel(date: Date) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+  })
+    .format(date)
+    .replace(/^\w/, (char) => char.toUpperCase());
+}
+
+function buildCalendarRows(monthDate: Date, schedules: CollectionSchedule[]) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const gridStart = new Date(firstDay);
+  gridStart.setDate(firstDay.getDate() - firstDay.getDay());
+
+  const rows: CalendarDay[][] = [];
+
+  for (let week = 0; week < 6; week += 1) {
+    const days: CalendarDay[] = [];
+
+    for (let day = 0; day < 7; day += 1) {
+      const date = new Date(gridStart);
+      date.setDate(gridStart.getDate() + week * 7 + day);
+      const match = schedules.find((schedule) => schedule.weekday === date.getDay());
+
+      days.push({
+        date,
+        dayNumber: date.getDate(),
+        inMonth: date.getMonth() === month,
+        wasteType: match?.wasteType,
+      });
+    }
+
+    rows.push(days);
+  }
+
+  return rows;
+}
+
+function formatCollectionDate(date: Date) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  })
+    .format(date)
+    .replace('.', '');
 }
 
 export function CalendarScreen({
   user,
   collectionSchedules,
-  upcomingCollections,
+  referenceDate,
 }: CalendarScreenProps) {
-  const { organicDays, recyclableDays } = legendDetails(collectionSchedules, user.neighborhood);
-  const electronicEvent = upcomingCollections.find((item) => item.wasteType === 'electronic');
+  const [visibleMonth, setVisibleMonth] = useState(
+    () => new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1),
+  );
+  const neighborhoodSchedules = useMemo(
+    () => collectionSchedules.filter((item) => item.neighborhood === user.neighborhood),
+    [collectionSchedules, user.neighborhood],
+  );
+  const calendarRows = useMemo(
+    () => buildCalendarRows(visibleMonth, neighborhoodSchedules),
+    [visibleMonth, neighborhoodSchedules],
+  );
+  const collectionDays = useMemo(
+    () =>
+      calendarRows
+        .flat()
+        .filter((day): day is CalendarDay & { wasteType: WasteType } => {
+          return day.inMonth && Boolean(day.wasteType);
+        }),
+    [calendarRows],
+  );
+  const { wetDays, dryDays } = legendDetails(collectionSchedules, user.neighborhood);
+  const monthLabel = getMonthLabel(visibleMonth);
 
   return (
     <>
@@ -118,9 +156,21 @@ export function CalendarScreen({
       </View>
 
       <View style={styles.calendarMonthRow}>
-        <Text style={styles.monthArrow}>{'‹'}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setVisibleMonth((current) => addMonths(current, -1))}
+          style={styles.monthArrowButton}
+        >
+          <Text style={styles.monthArrow}>{'‹'}</Text>
+        </Pressable>
         <Text style={styles.monthLabel}>{monthLabel}</Text>
-        <Text style={styles.monthArrow}>{'›'}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setVisibleMonth((current) => addMonths(current, 1))}
+          style={styles.monthArrowButton}
+        >
+          <Text style={styles.monthArrow}>{'›'}</Text>
+        </Pressable>
       </View>
 
       <View style={styles.calendarCard}>
@@ -139,17 +189,19 @@ export function CalendarScreen({
                 key={`${index}-${dayIndex}`}
                 style={[
                   styles.dayCell,
-                  { backgroundColor: day.inMonth ? colors.waste[day.wasteType ?? 'general'] : 'transparent' },
+                  day.wasteType && styles.dayCellCollection,
+                  {
+                    backgroundColor:
+                      day.inMonth && day.wasteType ? colors.waste[day.wasteType] : 'transparent',
+                  },
                   !day.inMonth && styles.dayCellMuted,
                 ]}
               >
-                {day.inMonth ? (
-                  <>
-                    <Text style={[styles.dayNumber, dayTextStyle(day.wasteType)]}>{day.dayNumber}</Text>
+                <Text style={[styles.dayNumber, dayTextStyle(day.wasteType)]}>{day.dayNumber}</Text>
+                {day.wasteType ? (
                     <Text style={[styles.dayMarker, markerStyle(day.wasteType)]}>
-                      {day.wasteType ? iconLabels[day.wasteType] : ''}
+                  {iconLabels[day.wasteType]}
                     </Text>
-                  </>
                 ) : null}
               </View>
             ))}
@@ -158,59 +210,80 @@ export function CalendarScreen({
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitleSmall}>Dias de coleta no mês</Text>
+        {collectionDays.length ? (
+          <View style={styles.listBlock}>
+            {collectionDays.map((day) => {
+              const schedule = neighborhoodSchedules.find(
+                (item) => item.weekday === day.date.getDay() && item.wasteType === day.wasteType,
+              );
+
+              return (
+                <View key={day.date.toISOString()} style={styles.scheduleCard}>
+                  <View style={styles.scheduleCardMain}>
+                    <View
+                      style={[
+                        styles.wasteBadge,
+                        { backgroundColor: colors.waste[day.wasteType] },
+                      ]}
+                    >
+                      <Text style={[styles.wasteBadgeText, getWasteTextStyle(day.wasteType)]}>
+                        {iconLabels[day.wasteType]}
+                      </Text>
+                    </View>
+                    <View style={styles.scheduleCardText}>
+                      <Text style={styles.scheduleTitle}>{getWasteLabel(day.wasteType)}</Text>
+                      <Text style={styles.scheduleMeta}>{formatCollectionDate(day.date)}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.scheduleTime}>
+                    {String(schedule?.startHour ?? 10).padStart(2, '0')}:00
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.noteCardInline}>
+            <Text style={styles.noteText}>
+              Este bairro ainda não tem agenda local cadastrada no protótipo. Use o mapa oficial
+              por endereço para confirmar o setor.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitleSmall}>Legenda:</Text>
       </View>
 
       <View style={styles.legendList}>
         <View style={styles.legendRow}>
-          <View style={[styles.wasteBadge, { backgroundColor: colors.waste.organic }]}>
-            <Text style={styles.wasteBadgeText}>{iconLabels.organic}</Text>
+          <View style={[styles.wasteBadge, { backgroundColor: colors.waste.wet }]}>
+            <Text style={styles.wasteBadgeText}>{iconLabels.wet}</Text>
           </View>
           <View style={styles.legendMetaBlock}>
-            <Text style={styles.legendTitle}>Orgânico</Text>
-            <Text style={styles.legendText}>{organicDays}</Text>
+            <Text style={styles.legendTitle}>Lixo úmido</Text>
+            <Text style={styles.legendText}>{wetDays}</Text>
           </View>
         </View>
 
         <View style={styles.legendRow}>
-          <View style={[styles.wasteBadge, { backgroundColor: colors.waste.recyclable }]}>
+          <View style={[styles.wasteBadge, { backgroundColor: colors.waste.dry }]}>
             <Text style={[styles.wasteBadgeText, styles.wasteBadgeTextCyan]}>
-              {iconLabels.recyclable}
+              {iconLabels.dry}
             </Text>
           </View>
           <View style={styles.legendMetaBlock}>
-            <Text style={styles.legendTitle}>Reciclável</Text>
-            <Text style={styles.legendText}>{recyclableDays}</Text>
-          </View>
-        </View>
-
-        <View style={styles.legendRow}>
-          <View style={[styles.wasteBadge, { backgroundColor: colors.waste.electronic }]}>
-            <Text style={[styles.wasteBadgeText, styles.wasteBadgeTextRed]}>
-              {iconLabels.electronic}
-            </Text>
-          </View>
-          <View style={styles.legendMetaBlock}>
-            <Text style={styles.legendTitle}>Eletrônico</Text>
-            <Text style={styles.legendText}>
-              {electronicEvent
-                ? `${new Intl.DateTimeFormat('pt-BR', {
-                    day: '2-digit',
-                    month: 'long',
-                  }).format(new Date(electronicEvent.occursAt))} - ${new Intl.DateTimeFormat('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }).format(new Date(electronicEvent.occursAt))} às 17:00`
-                : '10 de Outubro - 08:00 às 17:00'}
-            </Text>
-            <Text style={styles.legendText}>Praça Leônidas Ribas</Text>
+            <Text style={styles.legendTitle}>Lixo seco</Text>
+            <Text style={styles.legendText}>{dryDays}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.noteCard}>
         <Text style={styles.noteText}>
-          Deixe seu lixo na calçada até às 06:30 nos dias de coleta
+          Consulte o mapa oficial por endereço e clique na região colorida para ver dia e turno.
         </Text>
       </View>
     </>
