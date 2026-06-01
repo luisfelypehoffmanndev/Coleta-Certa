@@ -1,8 +1,9 @@
-import { Linking, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Pressable, Text, TextInput, View } from 'react-native';
 
 import { getLeadHourOptions } from '../domain/preferences';
 import { neighborhoods } from '../domain/types';
-import { appStyles as styles } from '../ui/styles';
+import { getAppStyles } from '../ui/styles';
 import type { NotificationPermissionStatus, ScheduledReminder } from '../services/notifications';
 import type { UserProfile } from '../domain/types';
 
@@ -17,10 +18,14 @@ interface ProfileScreenProps {
   isSchedulingNotification: boolean;
   hasSchedulableCollection: boolean;
   notificationError: string | null;
+  accountError: string | null;
+  isSubmittingAccountAction: boolean;
   onNeighborhoodChange: (value: UserProfile['neighborhood']) => void;
   onLeadHoursChange: (value: UserProfile['notificationLeadHours']) => void;
   onNotificationsEnabledChange: (value: UserProfile['notificationsEnabled']) => void;
+  onThemeChange: (value: UserProfile['theme']) => void;
   onSignOut: () => void;
+  onDeleteAccount: (password: string) => void;
 }
 
 function formatReminderDate(dateIso: string) {
@@ -52,11 +57,20 @@ export function ProfileScreen({
   isSchedulingNotification,
   hasSchedulableCollection,
   notificationError,
+  accountError,
+  isSubmittingAccountAction,
   onNeighborhoodChange,
   onLeadHoursChange,
   onNotificationsEnabledChange,
+  onThemeChange,
   onSignOut,
+  onDeleteAccount,
 }: ProfileScreenProps) {
+  const styles = getAppStyles(user.theme);
+  const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
+  const [isDeleteAccountPasswordVisible, setIsDeleteAccountPasswordVisible] = useState(false);
+
   return (
     <>
       <View style={styles.topHeader}>
@@ -72,7 +86,8 @@ export function ProfileScreen({
           <Text style={styles.body}>Cidade: {user.city}</Text>
           <Text style={styles.body}>Bairro: {user.neighborhood}</Text>
           <Text style={styles.body}>
-            Antecedência do lembrete: {user.notificationLeadHours} horas
+            Antecedência do lembrete: {user.notificationLeadHours}{' '}
+            {user.notificationLeadHours === 1 ? 'hora' : 'horas'}
           </Text>
         </View>
       </View>
@@ -179,6 +194,26 @@ export function ProfileScreen({
 
       <View style={styles.section}>
         <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Aparência</Text>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: user.theme === 'dark' }}
+            onPress={() => onThemeChange(user.theme === 'dark' ? 'light' : 'dark')}
+            style={styles.preferenceToggleRow}
+          >
+            <View style={styles.legendMetaBlock}>
+              <Text style={styles.bodyStrong}>Usar tema escuro</Text>
+              <Text style={styles.meta}>{user.theme === 'dark' ? 'Tema escuro' : 'Tema claro'}</Text>
+            </View>
+            <View style={[styles.toggleTrack, user.theme === 'dark' && styles.toggleTrackActive]}>
+              <View style={[styles.toggleThumb, user.theme === 'dark' && styles.toggleThumbActive]} />
+            </View>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Fonte dos dados</Text>
           <Text style={styles.body}>
             Os conteúdos seguem a página oficial de Coleta Seletiva da Prefeitura de Santo Ângelo.
@@ -196,6 +231,63 @@ export function ProfileScreen({
           <Pressable accessibilityRole="button" style={styles.signOutButton} onPress={onSignOut}>
             <Text style={styles.signOutButtonText}>Sair da conta</Text>
           </Pressable>
+          {isConfirmingDeletion ? (
+            <View style={styles.deleteAccountConfirmation}>
+              <Text style={styles.bodyStrong}>Excluir conta permanentemente?</Text>
+              <Text style={styles.sectionBody}>
+                Informe sua senha para confirmar. Esta ação não poderá ser desfeita.
+              </Text>
+              <View style={styles.passwordInputWrap}>
+                <TextInput
+                  accessibilityLabel="Senha para excluir conta"
+                  autoFocus
+                  secureTextEntry={!isDeleteAccountPasswordVisible}
+                  value={deleteAccountPassword}
+                  onChangeText={setDeleteAccountPassword}
+                  style={styles.passwordInput}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setIsDeleteAccountPasswordVisible((current) => !current)}
+                  style={styles.passwordVisibilityButton}
+                >
+                  <Text style={styles.passwordVisibilityButtonText}>
+                    {isDeleteAccountPasswordVisible ? 'Ocultar' : 'Mostrar'}
+                  </Text>
+                </Pressable>
+              </View>
+              {accountError ? <Text style={styles.errorText}>{accountError}</Text> : null}
+              <Pressable
+                accessibilityRole="button"
+                disabled={isSubmittingAccountAction || !deleteAccountPassword}
+                style={styles.deleteAccountButton}
+                onPress={() => onDeleteAccount(deleteAccountPassword)}
+              >
+                <Text style={styles.deleteAccountButtonText}>
+                  {isSubmittingAccountAction ? 'Excluindo conta...' : 'Confirmar exclusão'}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                style={styles.buttonSecondary}
+                onPress={() => {
+                  setDeleteAccountPassword('');
+                  setIsDeleteAccountPasswordVisible(false);
+                  setIsConfirmingDeletion(false);
+                }}
+              >
+                <Text style={styles.buttonSecondaryText}>Cancelar</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              style={styles.deleteAccountButton}
+              onPress={() => setIsConfirmingDeletion(true)}
+            >
+              <Text style={styles.deleteAccountButtonText}>Excluir minha conta</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </>

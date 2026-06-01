@@ -1,6 +1,9 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
@@ -102,4 +105,30 @@ export function subscribeToAuthState(callback: (session: AuthSession | null) => 
 
 export async function signOut() {
   await firebaseSignOut(firebaseAuth);
+}
+
+export async function deleteAccount(email: string, password: string) {
+  ensureFirebaseConfig();
+
+  try {
+    const user =
+      firebaseAuth.currentUser ??
+      (await signInWithEmailAndPassword(firebaseAuth, email.trim().toLowerCase(), password)).user;
+
+    const credential = EmailAuthProvider.credential(email.trim().toLowerCase(), password);
+    await reauthenticateWithCredential(user, credential);
+    await deleteUser(user);
+  } catch (error) {
+    const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+
+    if (
+      code.includes('auth/invalid-credential') ||
+      code.includes('auth/wrong-password') ||
+      code.includes('auth/user-not-found')
+    ) {
+      throw new AuthError('Senha incorreta.');
+    }
+
+    throw new AuthError('Não foi possível excluir sua conta.');
+  }
 }

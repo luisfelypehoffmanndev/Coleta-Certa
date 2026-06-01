@@ -1,7 +1,7 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
-import { colors, iconLabels } from '../theme/tokens';
-import { appStyles as styles } from '../ui/styles';
+import { iconLabels } from '../theme/tokens';
+import { getAppStyles, getThemeColors } from '../ui/styles';
 import { getWasteLabel } from '../domain/schedule';
 import type { ServiceAlert, UpcomingCollection, UserProfile } from '../domain/types';
 
@@ -24,7 +24,7 @@ function getWasteBadge(type: UpcomingCollection['wasteType']) {
   return iconLabels[type];
 }
 
-function getWasteTextStyle(type: UpcomingCollection['wasteType']) {
+function getWasteTextStyle(type: UpcomingCollection['wasteType'], styles: ReturnType<typeof getAppStyles>) {
   if (type === 'dry') {
     return styles.wasteBadgeTextCyan;
   }
@@ -41,6 +41,9 @@ export function HomeScreen({
   activeAlerts,
   upcomingCollections,
 }: HomeScreenProps) {
+  const styles = getAppStyles(user.theme);
+  const colors = getThemeColors(user.theme);
+
   return (
     <>
       <View style={[styles.topHeaderHero, styles.heroCard]}>
@@ -119,7 +122,7 @@ export function HomeScreen({
                     { backgroundColor: colors.waste[item.wasteType] },
                   ]}
                 >
-                  <Text style={[styles.wasteBadgeText, getWasteTextStyle(item.wasteType)]}>
+                  <Text style={[styles.wasteBadgeText, getWasteTextStyle(item.wasteType, styles)]}>
                     {getWasteBadge(item.wasteType)}
                   </Text>
                 </View>

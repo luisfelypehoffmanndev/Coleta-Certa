@@ -13,6 +13,7 @@ export const pilotUser: UserProfile = {
   neighborhood: 'Centro',
   notificationLeadHours: 12,
   notificationsEnabled: false,
+  theme: 'light',
 };
 
 export const collectionSchedules: CollectionSchedule[] = [

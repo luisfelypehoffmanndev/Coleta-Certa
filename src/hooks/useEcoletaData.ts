@@ -46,6 +46,7 @@ function buildUserFromSession(
     neighborhood: savedPreferences?.neighborhood ?? 'Centro',
     notificationLeadHours: savedPreferences?.notificationLeadHours ?? 12,
     notificationsEnabled: savedPreferences?.notificationsEnabled ?? false,
+    theme: savedPreferences?.theme ?? 'light',
   };
 }
 
@@ -124,6 +125,7 @@ export function useEcoletaData(session: AuthSession | null) {
         neighborhood,
         notificationLeadHours,
         notificationsEnabled: nextUser.notificationsEnabled,
+        theme: nextUser.theme,
       });
     } finally {
       setState((current) => ({
@@ -154,6 +156,38 @@ export function useEcoletaData(session: AuthSession | null) {
         neighborhood: nextUser.neighborhood,
         notificationLeadHours: nextUser.notificationLeadHours,
         notificationsEnabled,
+        theme: nextUser.theme,
+      });
+    } finally {
+      setState((current) => ({
+        ...current,
+        isSavingPreferences: false,
+      }));
+    }
+  }
+
+  async function updateTheme(theme: UserProfile['theme']) {
+    if (!state.user) {
+      return;
+    }
+
+    const nextUser = {
+      ...state.user,
+      theme,
+    };
+
+    setState((current) => ({
+      ...current,
+      user: nextUser,
+      isSavingPreferences: true,
+    }));
+
+    try {
+      await saveUserPreferences(nextUser.id, {
+        neighborhood: nextUser.neighborhood,
+        notificationLeadHours: nextUser.notificationLeadHours,
+        notificationsEnabled: nextUser.notificationsEnabled,
+        theme,
       });
     } finally {
       setState((current) => ({
@@ -167,5 +201,6 @@ export function useEcoletaData(session: AuthSession | null) {
     ...state,
     updatePreferences,
     updateNotificationsEnabled,
+    updateTheme,
   };
 }

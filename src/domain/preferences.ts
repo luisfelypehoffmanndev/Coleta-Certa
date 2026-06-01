@@ -1,6 +1,6 @@
 import type { UserPreferences, UserProfile } from './types';
 
-const allowedLeadHours = [6, 12, 24] as const;
+const allowedLeadHours = [1, 6, 12, 24] as const;
 
 export function getLeadHourOptions() {
   return allowedLeadHours;
@@ -21,5 +21,6 @@ export function mergeUserPreferences(
       preferences.notificationLeadHours ?? user.notificationLeadHours,
     notificationsEnabled:
       preferences.notificationsEnabled ?? user.notificationsEnabled,
+    theme: preferences.theme ?? user.theme,
   };
 }

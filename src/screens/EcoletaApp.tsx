@@ -1,12 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { buildUpcomingCollections, getActiveAlerts, getNextCollection } from '../domain/schedule';
 import { useAuth } from '../hooks/useAuth';
 import { useCollectionNotifications } from '../hooks/useCollectionNotifications';
 import { useEcoletaData } from '../hooks/useEcoletaData';
-import { appStyles as styles } from '../ui/styles';
+import { getAppStyles } from '../ui/styles';
 import { CalendarScreen } from './CalendarScreen';
 import { DisposalScreen } from './DisposalScreen';
 import { HomeScreen } from './HomeScreen';
@@ -22,12 +22,22 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: 'profile', label: 'Config' },
 ];
 
-function TabIcon({ type, selected }: { type: TabKey; selected: boolean }) {
+function TabIcon({
+  type,
+  selected,
+  styles,
+}: {
+  type: TabKey;
+  selected: boolean;
+  styles: ReturnType<typeof getAppStyles>;
+}) {
   if (type === 'home') {
     return (
       <View style={styles.homeIcon}>
         <View style={[styles.homeIconRoof, selected && styles.iconShapeActive]} />
-        <View style={[styles.homeIconBase, selected && styles.iconShapeActive]} />
+        <View style={[styles.homeIconBase, selected && styles.iconShapeActive]}>
+          <View style={styles.homeIconDoor} />
+        </View>
       </View>
     );
   }
@@ -68,7 +78,16 @@ function TabIcon({ type, selected }: { type: TabKey; selected: boolean }) {
 
 export function EcoletaApp() {
   const [activeTab, setActiveTab] = useState<TabKey>('home');
-  const { session, isLoading: isAuthLoading, isSubmitting, error, signIn, signUp, signOut } = useAuth();
+  const {
+    session,
+    isLoading: isAuthLoading,
+    isSubmitting,
+    error,
+    signIn,
+    signUp,
+    signOut,
+    deleteAccount,
+  } = useAuth();
   const {
     user,
     collectionSchedules,
@@ -78,9 +97,11 @@ export function EcoletaApp() {
     isSavingPreferences,
     updatePreferences,
     updateNotificationsEnabled,
+    updateTheme,
   } = useEcoletaData(session);
   const currentDate = useMemo(() => new Date(), []);
   const activeUser = session ? user : null;
+  const styles = getAppStyles(activeUser?.theme);
   const nextCollection = useMemo(
     () => (activeUser ? getNextCollection(collectionSchedules, activeUser, currentDate) : undefined),
     [activeUser, collectionSchedules, currentDate],
@@ -150,48 +171,61 @@ export function EcoletaApp() {
 
   return (
     <View style={styles.shell}>
-      <StatusBar style="dark" />
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, styles.contentWithTabs]}
+      <StatusBar style={user.theme === 'dark' ? 'light' : 'dark'} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.authenticatedKeyboardAvoider}
       >
-        {activeTab === 'home' ? (
-          <HomeScreen
-            user={user}
-            nextCollection={nextCollection}
-            activeAlerts={activeAlerts}
-            upcomingCollections={upcomingCollections}
-          />
-        ) : null}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.content, styles.contentWithTabs]}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
+          {activeTab === 'home' ? (
+            <HomeScreen
+              user={user}
+              nextCollection={nextCollection}
+              activeAlerts={activeAlerts}
+              upcomingCollections={upcomingCollections}
+            />
+          ) : null}
 
-        {activeTab === 'calendar' ? (
-          <CalendarScreen
-            user={user}
-            collectionSchedules={collectionSchedules}
-            referenceDate={currentDate}
-          />
-        ) : null}
+          {activeTab === 'calendar' ? (
+            <CalendarScreen
+              user={user}
+              collectionSchedules={collectionSchedules}
+              referenceDate={currentDate}
+            />
+          ) : null}
 
-        {activeTab === 'disposal' ? <DisposalScreen locations={disposalLocations} /> : null}
+          {activeTab === 'disposal' ? (
+            <DisposalScreen locations={disposalLocations} theme={user.theme} />
+          ) : null}
 
-        {activeTab === 'profile' ? (
-          <ProfileScreen
-            user={user}
-            isSavingPreferences={isSavingPreferences}
-            notificationPermissionStatus={notificationState.permissionStatus}
-            scheduledReminder={notificationState.scheduledReminder}
-            isSchedulingNotification={notificationState.isScheduling}
-            hasSchedulableCollection={Boolean(notificationNextCollection)}
-            notificationError={notificationState.error}
-            onNeighborhoodChange={(value) =>
-              updatePreferences(value, user.notificationLeadHours)
-            }
-            onLeadHoursChange={(value) => updatePreferences(user.neighborhood, value)}
-            onNotificationsEnabledChange={updateNotificationsEnabled}
-            onSignOut={signOut}
-          />
-        ) : null}
-      </ScrollView>
+          {activeTab === 'profile' ? (
+            <ProfileScreen
+              user={user}
+              isSavingPreferences={isSavingPreferences}
+              notificationPermissionStatus={notificationState.permissionStatus}
+              scheduledReminder={notificationState.scheduledReminder}
+              isSchedulingNotification={notificationState.isScheduling}
+              hasSchedulableCollection={Boolean(notificationNextCollection)}
+              notificationError={notificationState.error}
+              accountError={error}
+              isSubmittingAccountAction={isSubmitting}
+              onNeighborhoodChange={(value) =>
+                updatePreferences(value, user.notificationLeadHours)
+              }
+              onLeadHoursChange={(value) => updatePreferences(user.neighborhood, value)}
+              onNotificationsEnabledChange={updateNotificationsEnabled}
+              onThemeChange={updateTheme}
+              onSignOut={signOut}
+              onDeleteAccount={deleteAccount}
+            />
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.tabBar}>
         {tabs.map((tab) => {
@@ -204,7 +238,7 @@ export function EcoletaApp() {
               style={styles.tabButton}
             >
               <View style={[styles.tabIcon, selected && styles.tabIconActive]}>
-                <TabIcon type={tab.key} selected={selected} />
+                <TabIcon type={tab.key} selected={selected} styles={styles} />
               </View>
               <Text style={[styles.tabButtonText, selected && styles.tabButtonTextActive]}>
                 {tab.label}

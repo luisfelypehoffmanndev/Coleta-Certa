@@ -1,10 +1,12 @@
 import { StatusBar, StyleSheet } from 'react-native';
 
-import { colors, radii, spacing, typography } from '../theme/tokens';
+import { colors as lightColors, darkColors, radii, spacing, typography } from '../theme/tokens';
+import type { AppTheme } from '../domain/types';
 
 const statusBarInset = (StatusBar.currentHeight ?? 0) + 4;
 
-export const appStyles = StyleSheet.create({
+function createAppStyles(colors: typeof lightColors) {
+  return StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -12,6 +14,9 @@ export const appStyles = StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  authenticatedKeyboardAvoider: {
+    flex: 1,
   },
   scroll: {
     flex: 1,
@@ -37,12 +42,12 @@ export const appStyles = StyleSheet.create({
     gap: spacing.xs,
   },
   pageTitleLight: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: typography.title,
     fontWeight: '700',
   },
   pageSubtitleLight: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: typography.body,
   },
   heroCard: {
@@ -63,7 +68,7 @@ export const appStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandBadgeText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: typography.body,
     fontWeight: '700',
   },
@@ -72,7 +77,7 @@ export const appStyles = StyleSheet.create({
     flex: 1,
   },
   brandTitle: {
-    color: '#047857',
+    color: colors.primaryDark,
     fontSize: typography.title,
     fontWeight: '700',
   },
@@ -201,7 +206,7 @@ export const appStyles = StyleSheet.create({
     gap: 2,
   },
   scheduleTitle: {
-    color: '#5A5A5A',
+    color: colors.text,
     fontSize: typography.bodySm,
     fontWeight: '500',
   },
@@ -221,15 +226,15 @@ export const appStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   wasteBadgeText: {
-    color: '#9A3412',
+    color: colors.wasteText.wet,
     fontSize: typography.bodySm,
     fontWeight: '700',
   },
   wasteBadgeTextCyan: {
-    color: '#0891B2',
+    color: colors.wasteText.dry,
   },
   wasteBadgeTextRed: {
-    color: '#DC2626',
+    color: colors.dangerText,
   },
   wetIcon: {
     width: 22,
@@ -241,7 +246,7 @@ export const appStyles = StyleSheet.create({
     width: 16,
     height: 3,
     borderRadius: radii.pill,
-    backgroundColor: '#9A3412',
+    backgroundColor: colors.wasteText.wet,
     marginBottom: 2,
   },
   wetIconBin: {
@@ -249,7 +254,7 @@ export const appStyles = StyleSheet.create({
     height: 15,
     borderRadius: 3,
     borderWidth: 1.5,
-    borderColor: '#9A3412',
+    borderColor: colors.wasteText.wet,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
@@ -258,14 +263,14 @@ export const appStyles = StyleSheet.create({
     width: 7,
     height: 4,
     borderRadius: 4,
-    backgroundColor: '#9A3412',
+    backgroundColor: colors.wasteText.wet,
     transform: [{ rotate: '-18deg' }],
   },
   wetIconScrapSmall: {
     width: 4,
     height: 4,
     borderRadius: radii.pill,
-    backgroundColor: '#9A3412',
+    backgroundColor: colors.wasteText.wet,
   },
   dryIcon: {
     width: 20,
@@ -278,14 +283,14 @@ export const appStyles = StyleSheet.create({
     height: 18,
     borderRadius: 3,
     borderWidth: 1.5,
-    borderColor: '#0891B2',
+    borderColor: colors.wasteText.dry,
     backgroundColor: 'transparent',
   },
   dryIconLineLong: {
     width: 9,
     height: 2,
     borderRadius: radii.pill,
-    backgroundColor: '#0891B2',
+    backgroundColor: colors.wasteText.dry,
     position: 'absolute',
     top: 8,
   },
@@ -293,7 +298,7 @@ export const appStyles = StyleSheet.create({
     width: 6,
     height: 2,
     borderRadius: radii.pill,
-    backgroundColor: '#0891B2',
+    backgroundColor: colors.wasteText.dry,
     position: 'absolute',
     top: 13,
   },
@@ -341,7 +346,7 @@ export const appStyles = StyleSheet.create({
     lineHeight: 18,
   },
   tipText: {
-    color: '#325190',
+    color: colors.tipText,
     fontSize: typography.bodyLg,
     lineHeight: 20,
     flex: 1,
@@ -353,20 +358,20 @@ export const appStyles = StyleSheet.create({
   alertCard: {
     marginHorizontal: 18,
     marginTop: spacing.md,
-    backgroundColor: '#FFF2EC',
+    backgroundColor: colors.alertSurface,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: '#F0CBB7',
+    borderColor: colors.alertBorder,
     padding: spacing.md,
     gap: spacing.xs,
   },
   alertTitle: {
-    color: '#D9480F',
+    color: colors.alertTitle,
     fontSize: typography.titleSm,
     fontWeight: '700',
   },
   alertText: {
-    color: '#7C2D12',
+    color: colors.alertText,
     fontSize: typography.bodyLg,
     lineHeight: 20,
   },
@@ -458,7 +463,7 @@ export const appStyles = StyleSheet.create({
     gap: 2,
   },
   legendTitle: {
-    color: '#5A5A5A',
+    color: colors.text,
     fontSize: typography.titleSm,
     fontWeight: '500',
   },
@@ -473,7 +478,7 @@ export const appStyles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: '#BFD7FF',
+    borderColor: colors.noteBorder,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -481,7 +486,7 @@ export const appStyles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: '#BFD7FF',
+    borderColor: colors.noteBorder,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -499,6 +504,71 @@ export const appStyles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     gap: spacing.xs,
+  },
+  electronicWasteMapCard: {
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  mapPreview: {
+    height: 132,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.mapSurface,
+  },
+  mapRoad: {
+    position: 'absolute',
+    backgroundColor: colors.mapRoad,
+    borderWidth: 1,
+    borderColor: colors.mapRoadBorder,
+  },
+  mapRoadHorizontal: {
+    width: '120%',
+    height: 24,
+    transform: [{ rotate: '-8deg' }],
+  },
+  mapRoadVertical: {
+    width: 24,
+    height: '140%',
+    left: '24%',
+    transform: [{ rotate: '18deg' }],
+  },
+  mapRoadDiagonal: {
+    width: 22,
+    height: '150%',
+    right: '20%',
+    transform: [{ rotate: '-34deg' }],
+  },
+  mapPin: {
+    width: 34,
+    height: 34,
+    borderRadius: 20,
+    borderBottomRightRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryDark,
+    transform: [{ rotate: '45deg' }],
+  },
+  mapPinHole: {
+    width: 13,
+    height: 13,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  mapPinBase: {
+    width: 34,
+    height: 7,
+    marginTop: 16,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primaryDark,
+    opacity: 0.24,
+  },
+  electronicWasteMapContent: {
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   body: {
     color: colors.text,
@@ -522,7 +592,7 @@ export const appStyles = StyleSheet.create({
   },
   choiceChip: {
     borderRadius: radii.pill,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 14,
@@ -538,7 +608,7 @@ export const appStyles = StyleSheet.create({
     fontWeight: '600',
   },
   choiceChipTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   formGroup: {
     gap: spacing.xs,
@@ -554,9 +624,34 @@ export const appStyles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     color: colors.text,
     fontSize: typography.bodyLg,
+  },
+  passwordInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    backgroundColor: colors.surface,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: colors.text,
+    fontSize: typography.bodyLg,
+  },
+  passwordVisibilityButton: {
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  passwordVisibilityButtonText: {
+    color: colors.primaryDark,
+    fontSize: typography.body,
+    fontWeight: '700',
   },
   buttonPrimary: {
     backgroundColor: colors.primary,
@@ -567,12 +662,12 @@ export const appStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonPrimaryText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: typography.bodyLg,
     fontWeight: '700',
   },
   buttonSecondary: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
@@ -587,7 +682,7 @@ export const appStyles = StyleSheet.create({
     fontWeight: '600',
   },
   signOutButton: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.dangerSurface,
     borderRadius: radii.sm,
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -595,9 +690,29 @@ export const appStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   signOutButtonText: {
-    color: '#DC2626',
+    color: colors.dangerText,
     fontSize: typography.bodyLg,
     fontWeight: '700',
+  },
+  deleteAccountButton: {
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.dangerText,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAccountButtonText: {
+    color: colors.dangerText,
+    fontSize: typography.bodyLg,
+    fontWeight: '700',
+  },
+  deleteAccountConfirmation: {
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
   },
   preferenceToggleRow: {
     flexDirection: 'row',
@@ -626,11 +741,15 @@ export const appStyles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.dangerText,
     fontSize: typography.bodyLg,
   },
-  loginWrap: {
+  loginKeyboardAvoider: {
     flex: 1,
+    backgroundColor: colors.backgroundAccent,
+  },
+  loginWrap: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 18,
     paddingTop: statusBarInset + spacing.lg,
@@ -666,7 +785,7 @@ export const appStyles = StyleSheet.create({
     backgroundColor: colors.backgroundAccent,
   },
   loadingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -679,7 +798,7 @@ export const appStyles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 10,
     paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
   },
@@ -712,25 +831,34 @@ export const appStyles = StyleSheet.create({
     borderColor: colors.primary,
   },
   homeIcon: {
-    width: 18,
+    width: 20,
     height: 18,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   homeIconRoof: {
-    width: 13,
-    height: 13,
-    borderRadius: 2,
+    width: 11,
+    height: 11,
+    borderRadius: 1,
     backgroundColor: colors.textMuted,
     transform: [{ rotate: '45deg' }],
     position: 'absolute',
-    top: 1,
+    top: 2,
   },
   homeIconBase: {
-    width: 15,
-    height: 10,
-    borderRadius: 3,
+    width: 14,
+    height: 9,
+    borderRadius: 2,
     backgroundColor: colors.textMuted,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  homeIconDoor: {
+    width: 4,
+    height: 6,
+    borderTopLeftRadius: 1,
+    borderTopRightRadius: 1,
+    backgroundColor: colors.surface,
   },
   calendarIconBox: {
     width: 18,
@@ -821,4 +949,16 @@ export const appStyles = StyleSheet.create({
     borderRadius: radii.pill,
     backgroundColor: colors.textMuted,
   },
-});
+  });
+}
+
+export const appStyles = createAppStyles(lightColors);
+export const darkAppStyles = createAppStyles(darkColors);
+
+export function getAppStyles(theme: AppTheme = 'light') {
+  return theme === 'dark' ? darkAppStyles : appStyles;
+}
+
+export function getThemeColors(theme: AppTheme = 'light') {
+  return theme === 'dark' ? darkColors : lightColors;
+}

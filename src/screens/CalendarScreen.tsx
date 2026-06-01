@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { appStyles as styles } from '../ui/styles';
-import { colors, iconLabels } from '../theme/tokens';
+import { getAppStyles, getThemeColors } from '../ui/styles';
+import { iconLabels } from '../theme/tokens';
 import { getWasteLabel } from '../domain/schedule';
 import type { CollectionSchedule, UserProfile, WasteType } from '../domain/types';
 
@@ -21,31 +21,37 @@ interface CalendarDay {
   wasteType?: WasteType;
 }
 
-function dayTextStyle(type?: WasteType) {
+function dayTextStyle(
+  type: WasteType | undefined,
+  colors: ReturnType<typeof getThemeColors>,
+) {
   if (type === 'wet') {
-    return { color: '#92400E' };
+    return { color: colors.wasteText.wet };
   }
 
   if (type === 'dry') {
-    return { color: '#0891B2' };
+    return { color: colors.wasteText.dry };
   }
 
-  return { color: '#747474' };
+  return { color: colors.textMuted };
 }
 
-function markerStyle(type?: WasteType) {
+function markerStyle(
+  type: WasteType | undefined,
+  colors: ReturnType<typeof getThemeColors>,
+) {
   if (type === 'wet') {
-    return { color: '#92400E' };
+    return { color: colors.wasteText.wet };
   }
 
   if (type === 'dry') {
-    return { color: '#0891B2' };
+    return { color: colors.wasteText.dry };
   }
 
-  return { color: '#747474' };
+  return { color: colors.textMuted };
 }
 
-function getWasteTextStyle(type: WasteType) {
+function getWasteTextStyle(type: WasteType, styles: ReturnType<typeof getAppStyles>) {
   if (type === 'dry') {
     return styles.wasteBadgeTextCyan;
   }
@@ -125,6 +131,8 @@ export function CalendarScreen({
   collectionSchedules,
   referenceDate,
 }: CalendarScreenProps) {
+  const styles = getAppStyles(user.theme);
+  const colors = getThemeColors(user.theme);
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1),
   );
@@ -197,11 +205,13 @@ export function CalendarScreen({
                   !day.inMonth && styles.dayCellMuted,
                 ]}
               >
-                <Text style={[styles.dayNumber, dayTextStyle(day.wasteType)]}>{day.dayNumber}</Text>
+                <Text style={[styles.dayNumber, dayTextStyle(day.wasteType, colors)]}>
+                  {day.dayNumber}
+                </Text>
                 {day.wasteType ? (
-                    <Text style={[styles.dayMarker, markerStyle(day.wasteType)]}>
-                  {iconLabels[day.wasteType]}
-                    </Text>
+                  <Text style={[styles.dayMarker, markerStyle(day.wasteType, colors)]}>
+                    {iconLabels[day.wasteType]}
+                  </Text>
                 ) : null}
               </View>
             ))}
@@ -227,7 +237,7 @@ export function CalendarScreen({
                         { backgroundColor: colors.waste[day.wasteType] },
                       ]}
                     >
-                      <Text style={[styles.wasteBadgeText, getWasteTextStyle(day.wasteType)]}>
+                      <Text style={[styles.wasteBadgeText, getWasteTextStyle(day.wasteType, styles)]}>
                         {iconLabels[day.wasteType]}
                       </Text>
                     </View>

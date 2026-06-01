@@ -13,6 +13,7 @@ export const userProfileSchema = z.object({
   neighborhood: neighborhoodSchema,
   notificationLeadHours: z.number().int().min(1).max(48),
   notificationsEnabled: z.boolean(),
+  theme: z.enum(['light', 'dark']),
 });
 
 export const collectionScheduleSchema = z.object({

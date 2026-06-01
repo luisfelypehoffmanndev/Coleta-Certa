@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 
 import {
+  deleteAccount as deleteFirebaseAccount,
   signInWithPassword,
   signOut as signOutFirebase,
   signUpWithPassword,
   subscribeToAuthState,
 } from '../services/authService';
 import { clearSession, loadSession, saveSession } from '../services/sessionStorage';
-import { saveUserPreferences } from '../services/preferencesStorage';
+import { clearUserPreferences, saveUserPreferences } from '../services/preferencesStorage';
 import type { AuthSession, Neighborhood } from '../domain/types';
 
 interface AuthState {
@@ -103,6 +104,7 @@ export function useAuth() {
         neighborhood,
         notificationLeadHours: 12,
         notificationsEnabled: false,
+        theme: 'light',
       });
       await saveSession(session);
 
@@ -133,10 +135,41 @@ export function useAuth() {
     });
   }
 
+  async function deleteAccount(password: string) {
+    if (!state.session) {
+      return;
+    }
+
+    setState((current) => ({
+      ...current,
+      isSubmitting: true,
+      error: null,
+    }));
+
+    try {
+      await deleteFirebaseAccount(state.session.email, password);
+      await Promise.all([clearSession(), clearUserPreferences(state.session.userId)]);
+
+      setState({
+        session: null,
+        isLoading: false,
+        isSubmitting: false,
+        error: null,
+      });
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        isSubmitting: false,
+        error: error instanceof Error ? error.message : 'Não foi possível excluir sua conta.',
+      }));
+    }
+  }
+
   return {
     ...state,
     signIn,
     signUp,
     signOut,
+    deleteAccount,
   };
 }

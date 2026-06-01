@@ -1,6 +1,7 @@
 export const wasteTypes = ['wet', 'dry'] as const;
 
 export type WasteType = (typeof wasteTypes)[number];
+export type AppTheme = 'light' | 'dark';
 
 export type Neighborhood =
   | 'Centro'
@@ -45,12 +46,14 @@ export interface UserProfile {
   neighborhood: Neighborhood;
   notificationLeadHours: number;
   notificationsEnabled: boolean;
+  theme: AppTheme;
 }
 
 export interface UserPreferences {
   neighborhood: Neighborhood;
   notificationLeadHours: number;
   notificationsEnabled: boolean;
+  theme: AppTheme;
 }
 
 export interface AuthSession {

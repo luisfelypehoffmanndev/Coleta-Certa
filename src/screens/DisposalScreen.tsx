@@ -1,15 +1,21 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import { buildDisposalMapUrl, getWasteLabel } from '../domain/schedule';
-import { colors } from '../theme/tokens';
-import { appStyles as styles } from '../ui/styles';
-import type { DisposalLocation } from '../domain/types';
+import { appStyles as lightStyles, getAppStyles, getThemeColors } from '../ui/styles';
+import type { AppTheme, DisposalLocation } from '../domain/types';
 
 interface DisposalScreenProps {
   locations: DisposalLocation[];
+  theme: AppTheme;
 }
 
-function DisposalTipIcon({ type }: { type: 'wet' | 'dry' | 'help' }) {
+function DisposalTipIcon({
+  type,
+  styles,
+}: {
+  type: 'wet' | 'dry' | 'help';
+  styles: typeof lightStyles;
+}) {
   if (type === 'wet') {
     return (
       <View style={styles.wetIcon}>
@@ -51,7 +57,13 @@ function buildContactUrl(location: DisposalLocation) {
   return `tel:+55${phone[1]}${phone[2].replace(/\D/g, '')}`;
 }
 
-export function DisposalScreen({ locations }: DisposalScreenProps) {
+const electronicWasteMapUrl =
+  'https://www.google.com/maps/search/?api=1&query=ponto+de+coleta+de+lixo+eletronico+perto+de+mim';
+
+export function DisposalScreen({ locations, theme }: DisposalScreenProps) {
+  const styles = getAppStyles(theme);
+  const colors = getThemeColors(theme);
+
   return (
     <>
       <View style={styles.topHeader}>
@@ -65,7 +77,7 @@ export function DisposalScreen({ locations }: DisposalScreenProps) {
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
               <View style={[styles.wasteBadge, { backgroundColor: colors.waste.wet }]}>
-                <DisposalTipIcon type="wet" />
+                <DisposalTipIcon type="wet" styles={styles} />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Lixo úmido</Text>
@@ -79,8 +91,8 @@ export function DisposalScreen({ locations }: DisposalScreenProps) {
 
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
-              <View style={[styles.wasteBadge, { backgroundColor: '#DBF4FF' }]}>
-                <DisposalTipIcon type="dry" />
+              <View style={[styles.wasteBadge, { backgroundColor: colors.waste.dry }]}>
+                <DisposalTipIcon type="dry" styles={styles} />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Lixo seco</Text>
@@ -95,7 +107,7 @@ export function DisposalScreen({ locations }: DisposalScreenProps) {
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
               <View style={[styles.wasteBadge, { backgroundColor: colors.primarySoft }]}>
-                <DisposalTipIcon type="help" />
+                <DisposalTipIcon type="help" styles={styles} />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Dúvidas sobre horários</Text>
@@ -104,6 +116,35 @@ export function DisposalScreen({ locations }: DisposalScreenProps) {
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Lixo eletrônico</Text>
+        <View style={styles.electronicWasteMapCard}>
+          <View style={styles.mapPreview}>
+            <View style={[styles.mapRoad, styles.mapRoadHorizontal]} />
+            <View style={[styles.mapRoad, styles.mapRoadVertical]} />
+            <View style={[styles.mapRoad, styles.mapRoadDiagonal]} />
+            <View style={styles.mapPin}>
+              <View style={styles.mapPinHole} />
+            </View>
+            <View style={styles.mapPinBase} />
+          </View>
+          <View style={styles.electronicWasteMapContent}>
+            <Text style={styles.bodyStrong}>Encontre um ponto de descarte próximo</Text>
+            <Text style={styles.meta}>
+              Abra o mapa para localizar onde descartar celulares, pilhas, baterias e outros
+              eletrônicos corretamente.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.buttonPrimary}
+              onPress={() => Linking.openURL(electronicWasteMapUrl)}
+            >
+              <Text style={styles.buttonPrimaryText}>Ver ponto mais próximo no mapa</Text>
+            </Pressable>
           </View>
         </View>
       </View>

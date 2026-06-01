@@ -7,11 +7,13 @@ describe('preferences domain', () => {
       neighborhood: 'Jardim das Palmeiras',
       notificationLeadHours: 24,
       notificationsEnabled: true,
+      theme: 'dark',
     });
 
     expect(merged.neighborhood).toBe('Jardim das Palmeiras');
     expect(merged.notificationLeadHours).toBe(24);
     expect(merged.notificationsEnabled).toBe(true);
+    expect(merged.theme).toBe('dark');
     expect(merged.name).toBe(pilotUser.name);
   });
 

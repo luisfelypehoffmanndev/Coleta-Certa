@@ -8,7 +8,7 @@ function getStorageKey(userId: string) {
 }
 
 function isLeadHours(value: unknown): value is UserPreferences['notificationLeadHours'] {
-  return value === 6 || value === 12 || value === 24;
+  return value === 1 || value === 6 || value === 12 || value === 24;
 }
 
 export async function loadUserPreferences(userId: string): Promise<Partial<UserPreferences> | null> {
@@ -23,6 +23,7 @@ export async function loadUserPreferences(userId: string): Promise<Partial<UserP
     const neighborhood = parsed.neighborhood;
     const notificationLeadHours = parsed.notificationLeadHours;
     const notificationsEnabled = parsed.notificationsEnabled;
+    const theme = parsed.theme;
 
     return {
       neighborhood:
@@ -34,6 +35,7 @@ export async function loadUserPreferences(userId: string): Promise<Partial<UserP
         : undefined,
       notificationsEnabled:
         typeof notificationsEnabled === 'boolean' ? notificationsEnabled : undefined,
+      theme: theme === 'light' || theme === 'dark' ? theme : undefined,
     };
   } catch {
     return null;
@@ -42,4 +44,8 @@ export async function loadUserPreferences(userId: string): Promise<Partial<UserP
 
 export async function saveUserPreferences(userId: string, preferences: UserPreferences) {
   await AsyncStorage.setItem(getStorageKey(userId), JSON.stringify(preferences));
+}
+
+export async function clearUserPreferences(userId: string) {
+  await AsyncStorage.removeItem(getStorageKey(userId));
 }

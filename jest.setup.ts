@@ -44,7 +44,10 @@ jest.mock('firebase/app', () => ({
 }));
 
 jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({})),
+  getAuth: jest.fn(() => ({ currentUser: mockFirebaseUser })),
+  EmailAuthProvider: {
+    credential: jest.fn(() => ({})),
+  },
   onAuthStateChanged: jest.fn((_auth, callback) => {
     callback(null);
     return jest.fn();
@@ -53,4 +56,6 @@ jest.mock('firebase/auth', () => ({
   createUserWithEmailAndPassword: jest.fn().mockResolvedValue({ user: mockFirebaseUser }),
   updateProfile: jest.fn().mockResolvedValue(undefined),
   signOut: jest.fn().mockResolvedValue(undefined),
+  reauthenticateWithCredential: jest.fn().mockResolvedValue(undefined),
+  deleteUser: jest.fn().mockResolvedValue(undefined),
 }));
