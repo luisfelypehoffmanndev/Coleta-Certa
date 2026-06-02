@@ -3,10 +3,11 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { buildUpcomingCollections, getActiveAlerts, getNextCollection } from '../domain/schedule';
+import { AppIcon, type AppIconName } from '../components/AppIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useCollectionNotifications } from '../hooks/useCollectionNotifications';
 import { useEcoletaData } from '../hooks/useEcoletaData';
-import { getAppStyles } from '../ui/styles';
+import { getAppStyles, getThemeColors } from '../ui/styles';
 import { CalendarScreen } from './CalendarScreen';
 import { DisposalScreen } from './DisposalScreen';
 import { HomeScreen } from './HomeScreen';
@@ -25,55 +26,21 @@ const tabs: { key: TabKey; label: string }[] = [
 function TabIcon({
   type,
   selected,
-  styles,
+  theme,
 }: {
   type: TabKey;
   selected: boolean;
-  styles: ReturnType<typeof getAppStyles>;
+  theme?: Parameters<typeof getThemeColors>[0];
 }) {
-  if (type === 'home') {
-    return (
-      <View style={styles.homeIcon}>
-        <View style={[styles.homeIconRoof, selected && styles.iconShapeActive]} />
-        <View style={[styles.homeIconBase, selected && styles.iconShapeActive]}>
-          <View style={styles.homeIconDoor} />
-        </View>
-      </View>
-    );
-  }
+  const colors = getThemeColors(theme);
+  const names: Record<TabKey, AppIconName> = {
+    home: 'home',
+    calendar: 'calendar',
+    disposal: 'map',
+    profile: 'settings',
+  };
 
-  if (type === 'calendar') {
-    return (
-      <View style={[styles.calendarIconBox, selected && styles.iconStrokeActive]}>
-        <View style={[styles.calendarIconTop, selected && styles.iconShapeActive]} />
-        <View style={styles.calendarIconGrid}>
-          <View style={[styles.calendarIconDot, selected && styles.iconShapeActive]} />
-          <View style={[styles.calendarIconDot, selected && styles.iconShapeActive]} />
-          <View style={[styles.calendarIconDot, selected && styles.iconShapeActive]} />
-        </View>
-      </View>
-    );
-  }
-
-  if (type === 'disposal') {
-    return (
-      <View style={styles.tipsIcon}>
-        <View style={[styles.tipsIconBubble, selected && styles.iconStrokeActive]}>
-          <View style={[styles.tipsIconLineLong, selected && styles.iconShapeActive]} />
-          <View style={[styles.tipsIconLineShort, selected && styles.iconShapeActive]} />
-        </View>
-        <View style={[styles.tipsIconTail, selected && styles.iconShapeActive]} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.settingsIcon}>
-      <View style={[styles.settingsIconCircle, selected && styles.iconStrokeActive]} />
-      <View style={[styles.settingsIconSliderTop, selected && styles.iconShapeActive]} />
-      <View style={[styles.settingsIconSliderBottom, selected && styles.iconShapeActive]} />
-    </View>
-  );
+  return <AppIcon color={selected ? colors.primary : colors.textMuted} name={names[type]} size={18} />;
 }
 
 export function EcoletaApp() {
@@ -95,6 +62,7 @@ export function EcoletaApp() {
     serviceAlerts,
     isLoading,
     isSavingPreferences,
+    error: dataError,
     updatePreferences,
     updateNotificationsEnabled,
     updateTheme,
@@ -111,7 +79,7 @@ export function EcoletaApp() {
       activeUser
         ? buildUpcomingCollections(
             collectionSchedules,
-            activeUser.neighborhood,
+            activeUser.sectorId,
             activeUser.notificationLeadHours,
             currentDate,
           ).slice(0, 3)
@@ -160,9 +128,12 @@ export function EcoletaApp() {
         <StatusBar style="dark" />
         <View style={styles.loadingCard}>
           <Text style={styles.eyebrow}>Coleta Certa</Text>
-          <Text style={styles.title}>Carregando dados de Santo Ângelo</Text>
+          <Text style={styles.title}>
+            {dataError ? 'Falha ao carregar dados' : 'Carregando dados de Santo Ângelo'}
+          </Text>
           <Text style={styles.subtitle}>
-            Estamos preparando a agenda por bairro e os canais oficiais da coleta seletiva.
+            {dataError ||
+              'Estamos preparando a agenda por setor e os canais oficiais da coleta seletiva.'}
           </Text>
         </View>
       </View>
@@ -214,10 +185,10 @@ export function EcoletaApp() {
               notificationError={notificationState.error}
               accountError={error}
               isSubmittingAccountAction={isSubmitting}
-              onNeighborhoodChange={(value) =>
+              onSectorChange={(value) =>
                 updatePreferences(value, user.notificationLeadHours)
               }
-              onLeadHoursChange={(value) => updatePreferences(user.neighborhood, value)}
+              onLeadHoursChange={(value) => updatePreferences(user.sectorId, value)}
               onNotificationsEnabledChange={updateNotificationsEnabled}
               onThemeChange={updateTheme}
               onSignOut={signOut}
@@ -238,7 +209,7 @@ export function EcoletaApp() {
               style={styles.tabButton}
             >
               <View style={[styles.tabIcon, selected && styles.tabIconActive]}>
-                <TabIcon type={tab.key} selected={selected} styles={styles} />
+                <TabIcon type={tab.key} selected={selected} theme={activeUser?.theme} />
               </View>
               <Text style={[styles.tabButtonText, selected && styles.tabButtonTextActive]}>
                 {tab.label}

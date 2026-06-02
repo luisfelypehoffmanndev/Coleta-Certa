@@ -1,7 +1,9 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
+import { AppIcon } from '../components/AppIcon';
+import { WasteIcon } from '../components/WasteIcon';
 import { buildDisposalMapUrl, getWasteLabel } from '../domain/schedule';
-import { appStyles as lightStyles, getAppStyles, getThemeColors } from '../ui/styles';
+import { getAppStyles, getThemeColors } from '../ui/styles';
 import type { AppTheme, DisposalLocation } from '../domain/types';
 
 interface DisposalScreenProps {
@@ -11,39 +13,15 @@ interface DisposalScreenProps {
 
 function DisposalTipIcon({
   type,
-  styles,
+  color,
 }: {
   type: 'wet' | 'dry' | 'help';
-  styles: typeof lightStyles;
+  color: string;
 }) {
-  if (type === 'wet') {
-    return (
-      <View style={styles.wetIcon}>
-        <View style={styles.wetIconLid} />
-        <View style={styles.wetIconBin}>
-          <View style={styles.wetIconScrap} />
-          <View style={styles.wetIconScrapSmall} />
-        </View>
-      </View>
-    );
-  }
-
-  if (type === 'dry') {
-    return (
-      <View style={styles.dryIcon}>
-        <View style={styles.dryIconSheet} />
-        <View style={styles.dryIconLineLong} />
-        <View style={styles.dryIconLineShort} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.locationHelpIcon}>
-      <View style={styles.locationHelpPin} />
-      <View style={styles.locationHelpHole} />
-      <View style={styles.locationHelpBase} />
-    </View>
+  return type === 'help' ? (
+    <AppIcon color={color} name="map" size={21} />
+  ) : (
+    <WasteIcon color={color} type={type} />
   );
 }
 
@@ -77,7 +55,7 @@ export function DisposalScreen({ locations, theme }: DisposalScreenProps) {
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
               <View style={[styles.wasteBadge, { backgroundColor: colors.waste.wet }]}>
-                <DisposalTipIcon type="wet" styles={styles} />
+                <DisposalTipIcon color={colors.wasteText.wet} type="wet" />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Lixo úmido</Text>
@@ -92,7 +70,7 @@ export function DisposalScreen({ locations, theme }: DisposalScreenProps) {
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
               <View style={[styles.wasteBadge, { backgroundColor: colors.waste.dry }]}>
-                <DisposalTipIcon type="dry" styles={styles} />
+                <DisposalTipIcon color={colors.wasteText.dry} type="dry" />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Lixo seco</Text>
@@ -107,7 +85,7 @@ export function DisposalScreen({ locations, theme }: DisposalScreenProps) {
           <View style={[styles.card, { minHeight: 90 }]}>
             <View style={styles.legendRow}>
               <View style={[styles.wasteBadge, { backgroundColor: colors.primarySoft }]}>
-                <DisposalTipIcon type="help" styles={styles} />
+                <DisposalTipIcon color={colors.primaryDark} type="help" />
               </View>
               <View style={styles.legendMetaBlock}>
                 <Text style={styles.legendTitle}>Dúvidas sobre horários</Text>

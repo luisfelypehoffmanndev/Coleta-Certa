@@ -1,7 +1,8 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import { getWasteLabel } from '../domain/schedule';
+import { formatScheduleTime, getWasteLabel } from '../domain/schedule';
+import { getSectorLabel } from '../domain/sectors';
 import type { UpcomingCollection, UserProfile } from '../domain/types';
 
 const channelId = 'collection-reminders';
@@ -105,13 +106,11 @@ export async function scheduleCollectionReminder(
     identifier: collectionReminderId,
     content: {
       title: 'Prepare o lixo para a coleta',
-      body: `${getWasteLabel(collection.wasteType)} em ${user.neighborhood}. Separe e coloque para fora antes das ${String(
-        collection.startHour,
-      ).padStart(2, '0')}:00.`,
+      body: `${getWasteLabel(collection.wasteType)} no ${getSectorLabel(user.sectorId)}. Separe e coloque para fora antes das ${formatScheduleTime(collection)}.`,
       sound: 'default',
       data: {
         collectionId: collection.id,
-        neighborhood: user.neighborhood,
+        sectorId: user.sectorId,
         wasteType: collection.wasteType,
       },
     },

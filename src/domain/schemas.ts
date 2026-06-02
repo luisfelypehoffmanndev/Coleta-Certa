@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
-import { neighborhoods, wasteTypes } from './types';
+import { sectorIds, wasteTypes } from './types';
 
 export const wasteTypeSchema = z.enum(wasteTypes);
-export const neighborhoodSchema = z.enum(neighborhoods);
+export const sectorIdSchema = z.enum(sectorIds);
 
 export const userProfileSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(2),
   email: z.email(),
   city: z.string().min(2),
-  neighborhood: neighborhoodSchema,
+  sectorId: sectorIdSchema,
   notificationLeadHours: z.number().int().min(1).max(48),
   notificationsEnabled: z.boolean(),
   theme: z.enum(['light', 'dark']),
@@ -18,10 +18,11 @@ export const userProfileSchema = z.object({
 
 export const collectionScheduleSchema = z.object({
   id: z.string().min(1),
-  neighborhood: neighborhoodSchema,
+  sectorId: sectorIdSchema,
   wasteType: wasteTypeSchema,
   weekday: z.number().int().min(0).max(6),
   startHour: z.number().int().min(0).max(23),
+  startMinute: z.number().int().min(0).max(59),
   guidance: z.string().min(8),
 });
 
@@ -40,7 +41,7 @@ export const serviceAlertSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(4),
   message: z.string().min(8),
-  affectedNeighborhoods: z.array(neighborhoodSchema).min(1),
+  affectedSectorIds: z.array(sectorIdSchema).min(1),
   startsAt: z.iso.datetime(),
   endsAt: z.iso.datetime(),
 });

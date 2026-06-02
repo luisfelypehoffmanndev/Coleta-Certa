@@ -9,14 +9,15 @@ import {
   View,
 } from 'react-native';
 
-import { neighborhoods, type Neighborhood } from '../domain/types';
+import { SectorPicker } from '../components/SectorPicker';
+import type { SectorId } from '../domain/types';
 import { appStyles as styles } from '../ui/styles';
 
 interface LoginScreenProps {
   error: string | null;
   isSubmitting: boolean;
   onSignIn: (email: string, password: string) => void;
-  onSignUp: (name: string, email: string, password: string, neighborhood: Neighborhood) => void;
+  onSignUp: (name: string, email: string, password: string, sectorId: SectorId) => void;
 }
 
 type AuthMode = 'signIn' | 'signUp';
@@ -27,7 +28,7 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [neighborhood, setNeighborhood] = useState<Neighborhood>('Centro');
+  const [sectorId, setSectorId] = useState<SectorId>('sector-01');
   const isSignUp = mode === 'signUp';
 
   return (
@@ -44,7 +45,7 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
           <Text style={styles.eyebrow}>Acesso do usuário</Text>
           <Text style={styles.title}>Entrar no Coleta Certa</Text>
           <Text style={styles.subtitle}>
-            Acesse sua conta para consultar a coleta seletiva do seu bairro.
+            Acesse sua conta para consultar a coleta seletiva do seu setor.
           </Text>
         </View>
 
@@ -54,7 +55,7 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
           </Text>
           <Text style={styles.sectionBody}>
             {isSignUp
-              ? 'Informe seus dados para configurar bairro e preferências iniciais.'
+              ? 'Informe seus dados para configurar setor e preferências iniciais.'
               : 'Informe seu e-mail e senha para continuar.'}
           </Text>
 
@@ -106,25 +107,8 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
 
           {isSignUp ? (
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>Bairro</Text>
-              <View style={styles.chipRow}>
-                {neighborhoods.map((item) => {
-                  const selected = item === neighborhood;
-
-                  return (
-                    <Pressable
-                      key={item}
-                      accessibilityRole="button"
-                      onPress={() => setNeighborhood(item)}
-                      style={[styles.choiceChip, selected && styles.choiceChipActive]}
-                    >
-                      <Text style={[styles.choiceChipText, selected && styles.choiceChipTextActive]}>
-                        {item}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <Text style={styles.inputLabel}>Setor de coleta</Text>
+              <SectorPicker selectedSectorId={sectorId} onChange={setSectorId} />
             </View>
           ) : null}
 
@@ -135,7 +119,7 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
             style={styles.buttonPrimary}
             onPress={() =>
               isSignUp
-                ? onSignUp(name, email, password, neighborhood)
+                ? onSignUp(name, email, password, sectorId)
                 : onSignIn(email, password)
             }
           >

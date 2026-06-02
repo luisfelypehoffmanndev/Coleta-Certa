@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Linking, Pressable, Text, TextInput, View } from 'react-native';
 
 import { getLeadHourOptions } from '../domain/preferences';
-import { neighborhoods } from '../domain/types';
+import { getSectorLabel } from '../domain/sectors';
+import { SectorPicker } from '../components/SectorPicker';
 import { getAppStyles } from '../ui/styles';
 import type { NotificationPermissionStatus, ScheduledReminder } from '../services/notifications';
 import type { UserProfile } from '../domain/types';
@@ -20,7 +21,7 @@ interface ProfileScreenProps {
   notificationError: string | null;
   accountError: string | null;
   isSubmittingAccountAction: boolean;
-  onNeighborhoodChange: (value: UserProfile['neighborhood']) => void;
+  onSectorChange: (value: UserProfile['sectorId']) => void;
   onLeadHoursChange: (value: UserProfile['notificationLeadHours']) => void;
   onNotificationsEnabledChange: (value: UserProfile['notificationsEnabled']) => void;
   onThemeChange: (value: UserProfile['theme']) => void;
@@ -59,7 +60,7 @@ export function ProfileScreen({
   notificationError,
   accountError,
   isSubmittingAccountAction,
-  onNeighborhoodChange,
+  onSectorChange,
   onLeadHoursChange,
   onNotificationsEnabledChange,
   onThemeChange,
@@ -84,7 +85,7 @@ export function ProfileScreen({
           <Text style={styles.body}>Nome: {user.name}</Text>
           <Text style={styles.body}>E-mail: {user.email}</Text>
           <Text style={styles.body}>Cidade: {user.city}</Text>
-          <Text style={styles.body}>Bairro: {user.neighborhood}</Text>
+          <Text style={styles.body}>Setor: {getSectorLabel(user.sectorId)}</Text>
           <Text style={styles.body}>
             Antecedência do lembrete: {user.notificationLeadHours}{' '}
             {user.notificationLeadHours === 1 ? 'hora' : 'horas'}
@@ -99,24 +100,11 @@ export function ProfileScreen({
             Estas opções já alteram o conteúdo do app e ficam salvas no aparelho.
           </Text>
 
-          <View style={styles.chipRow}>
-            {neighborhoods.map((neighborhood) => {
-              const selected = neighborhood === user.neighborhood;
-
-              return (
-                <Pressable
-                  key={neighborhood}
-                  accessibilityRole="button"
-                  onPress={() => onNeighborhoodChange(neighborhood)}
-                  style={[styles.choiceChip, selected && styles.choiceChipActive]}
-                >
-                  <Text style={[styles.choiceChipText, selected && styles.choiceChipTextActive]}>
-                    {neighborhood}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SectorPicker
+            selectedSectorId={user.sectorId}
+            onChange={onSectorChange}
+            theme={user.theme}
+          />
 
           <View style={styles.chipRow}>
             {getLeadHourOptions().map((leadHours) => {
@@ -177,7 +165,7 @@ export function ProfileScreen({
             {!user.notificationsEnabled
               ? 'Ative os lembretes para agendar notificações da próxima coleta.'
               : !hasSchedulableCollection
-                ? 'Sem agenda local confirmada para este bairro.'
+                ? 'Sem agenda local confirmada para este setor.'
               : scheduledReminder
               ? `Próximo lembrete: ${formatReminderDate(scheduledReminder.scheduledAt)}`
               : isSchedulingNotification
@@ -185,7 +173,7 @@ export function ProfileScreen({
                 : 'Nenhum lembrete agendado ainda.'}
           </Text>
           <Text style={styles.sectionBody}>
-            O app agenda automaticamente um lembrete local para a próxima coleta do seu bairro,
+            O app agenda automaticamente um lembrete local para a próxima coleta do seu setor,
             respeitando a antecedência escolhida.
           </Text>
           {notificationError ? <Text style={styles.errorText}>{notificationError}</Text> : null}

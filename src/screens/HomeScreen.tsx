@@ -1,8 +1,9 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
-import { iconLabels } from '../theme/tokens';
+import { WasteIcon } from '../components/WasteIcon';
 import { getAppStyles, getThemeColors } from '../ui/styles';
 import { getWasteLabel } from '../domain/schedule';
+import { getSectorLabel } from '../domain/sectors';
 import type { ServiceAlert, UpcomingCollection, UserProfile } from '../domain/types';
 
 function formatReminder(dateIso: string) {
@@ -18,18 +19,6 @@ interface HomeScreenProps {
   nextCollection?: UpcomingCollection;
   activeAlerts: ServiceAlert[];
   upcomingCollections: UpcomingCollection[];
-}
-
-function getWasteBadge(type: UpcomingCollection['wasteType']) {
-  return iconLabels[type];
-}
-
-function getWasteTextStyle(type: UpcomingCollection['wasteType'], styles: ReturnType<typeof getAppStyles>) {
-  if (type === 'dry') {
-    return styles.wasteBadgeTextCyan;
-  }
-
-  return undefined;
 }
 
 const officialMapUrl =
@@ -56,7 +45,7 @@ export function HomeScreen({
             <View style={styles.locationRow}>
               <View style={styles.pinDot} />
               <Text style={styles.locationText}>
-                Santo Ângelo - {user.neighborhood}
+                Santo Ângelo - {getSectorLabel(user.sectorId)}
               </Text>
             </View>
           </View>
@@ -122,9 +111,7 @@ export function HomeScreen({
                     { backgroundColor: colors.waste[item.wasteType] },
                   ]}
                 >
-                  <Text style={[styles.wasteBadgeText, getWasteTextStyle(item.wasteType, styles)]}>
-                    {getWasteBadge(item.wasteType)}
-                  </Text>
+                  <WasteIcon color={colors.wasteText[item.wasteType]} type={item.wasteType} />
                 </View>
                 <View style={styles.scheduleCardText}>
                   <Text style={styles.scheduleTitle}>{getWasteLabel(item.wasteType)}</Text>
@@ -144,7 +131,7 @@ export function HomeScreen({
         ) : (
           <View style={styles.noteCardInline}>
             <Text style={styles.noteText}>
-              Este bairro ainda não tem agenda local confirmada no app. Consulte o mapa oficial
+              Este setor ainda não tem agenda local confirmada no app. Consulte o mapa oficial
               para ver dia e turno por endereço.
             </Text>
           </View>

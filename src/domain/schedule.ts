@@ -1,7 +1,7 @@
 import type {
   CollectionSchedule,
   DisposalLocation,
-  Neighborhood,
+  SectorId,
   ServiceAlert,
   UpcomingCollection,
   UserProfile,
@@ -16,7 +16,7 @@ function cloneDate(date: Date) {
 
 function nextOccurrence(schedule: CollectionSchedule, now: Date) {
   const candidate = cloneDate(now);
-  candidate.setHours(schedule.startHour, 0, 0, 0);
+  candidate.setHours(schedule.startHour, schedule.startMinute, 0, 0);
 
   const dayDelta = (schedule.weekday - candidate.getDay() + 7) % 7;
   candidate.setDate(candidate.getDate() + dayDelta);
@@ -43,12 +43,12 @@ export function getWasteLabel(type: WasteType) {
 
 export function buildUpcomingCollections(
   schedules: CollectionSchedule[],
-  neighborhood: Neighborhood,
+  sectorId: SectorId,
   leadHours: number,
   now = new Date(),
 ): UpcomingCollection[] {
   return schedules
-    .filter((schedule) => schedule.neighborhood === neighborhood)
+    .filter((schedule) => schedule.sectorId === sectorId)
     .map((schedule) => {
       const occursAt = nextOccurrence(schedule, now);
       const reminderAt = cloneDate(occursAt);
@@ -71,7 +71,7 @@ export function getNextCollection(
 ) {
   return buildUpcomingCollections(
     schedules,
-    user.neighborhood,
+    user.sectorId,
     user.notificationLeadHours,
     now,
   )[0];
@@ -80,10 +80,14 @@ export function getNextCollection(
 export function getActiveAlerts(alerts: ServiceAlert[], user: UserProfile, now = new Date()) {
   return alerts.filter((alert) => {
     return (
-      alert.affectedNeighborhoods.includes(user.neighborhood) &&
+      alert.affectedSectorIds.includes(user.sectorId) &&
       new Date(alert.endsAt).getTime() >= now.getTime()
     );
   });
+}
+
+export function formatScheduleTime(schedule: Pick<CollectionSchedule, 'startHour' | 'startMinute'>) {
+  return `${String(schedule.startHour).padStart(2, '0')}:${String(schedule.startMinute).padStart(2, '0')}`;
 }
 
 export function buildDisposalMapUrl(location: DisposalLocation) {

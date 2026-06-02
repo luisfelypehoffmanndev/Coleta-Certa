@@ -16,7 +16,7 @@ export function mergeUserPreferences(
 
   return {
     ...user,
-    neighborhood: preferences.neighborhood ?? user.neighborhood,
+    sectorId: preferences.sectorId ?? user.sectorId,
     notificationLeadHours:
       preferences.notificationLeadHours ?? user.notificationLeadHours,
     notificationsEnabled:

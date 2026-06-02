@@ -10,7 +10,7 @@ import type {
   AuthSession,
   CollectionSchedule,
   DisposalLocation,
-  Neighborhood,
+  SectorId,
   ServiceAlert,
   UserPreferences,
   UserProfile,
@@ -23,6 +23,7 @@ interface EcoletaDataState {
   serviceAlerts: ServiceAlert[];
   isLoading: boolean;
   isSavingPreferences: boolean;
+  error: string | null;
 }
 
 const initialState: EcoletaDataState = {
@@ -32,6 +33,7 @@ const initialState: EcoletaDataState = {
   serviceAlerts: [],
   isLoading: true,
   isSavingPreferences: false,
+  error: null,
 };
 
 function buildUserFromSession(
@@ -43,7 +45,7 @@ function buildUserFromSession(
     name: session.displayName || session.email,
     email: session.email,
     city: 'Santo Ângelo',
-    neighborhood: savedPreferences?.neighborhood ?? 'Centro',
+    sectorId: savedPreferences?.sectorId ?? 'sector-01',
     notificationLeadHours: savedPreferences?.notificationLeadHours ?? 12,
     notificationsEnabled: savedPreferences?.notificationsEnabled ?? false,
     theme: savedPreferences?.theme ?? 'light',
@@ -84,15 +86,20 @@ export function useEcoletaData(session: AuthSession | null) {
         serviceAlerts,
         isLoading: false,
         isSavingPreferences: false,
+        error: null,
       });
     }
 
-    load().catch(() => {
+    load().catch((error) => {
       if (!mounted) {
         return;
       }
 
-      setState((current) => ({ ...current, isLoading: false }));
+      setState((current) => ({
+        ...current,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Falha ao carregar dados do piloto.',
+      }));
     });
 
     return () => {
@@ -101,7 +108,7 @@ export function useEcoletaData(session: AuthSession | null) {
   }, [session]);
 
   async function updatePreferences(
-    neighborhood: Neighborhood,
+    sectorId: SectorId,
     notificationLeadHours: UserProfile['notificationLeadHours'],
   ) {
     if (!state.user) {
@@ -110,7 +117,7 @@ export function useEcoletaData(session: AuthSession | null) {
 
     const nextUser = {
       ...state.user,
-      neighborhood,
+      sectorId,
       notificationLeadHours,
     };
 
@@ -122,7 +129,7 @@ export function useEcoletaData(session: AuthSession | null) {
 
     try {
       await saveUserPreferences(nextUser.id, {
-        neighborhood,
+        sectorId,
         notificationLeadHours,
         notificationsEnabled: nextUser.notificationsEnabled,
         theme: nextUser.theme,
@@ -153,7 +160,7 @@ export function useEcoletaData(session: AuthSession | null) {
 
     try {
       await saveUserPreferences(nextUser.id, {
-        neighborhood: nextUser.neighborhood,
+        sectorId: nextUser.sectorId,
         notificationLeadHours: nextUser.notificationLeadHours,
         notificationsEnabled,
         theme: nextUser.theme,
@@ -184,7 +191,7 @@ export function useEcoletaData(session: AuthSession | null) {
 
     try {
       await saveUserPreferences(nextUser.id, {
-        neighborhood: nextUser.neighborhood,
+        sectorId: nextUser.sectorId,
         notificationLeadHours: nextUser.notificationLeadHours,
         notificationsEnabled: nextUser.notificationsEnabled,
         theme,

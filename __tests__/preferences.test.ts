@@ -4,13 +4,13 @@ import { pilotUser } from '../src/data/mockData';
 describe('preferences domain', () => {
   it('merges saved preferences over the pilot user', () => {
     const merged = mergeUserPreferences(pilotUser, {
-      neighborhood: 'Jardim das Palmeiras',
+      sectorId: 'sector-04',
       notificationLeadHours: 24,
       notificationsEnabled: true,
       theme: 'dark',
     });
 
-    expect(merged.neighborhood).toBe('Jardim das Palmeiras');
+    expect(merged.sectorId).toBe('sector-04');
     expect(merged.notificationLeadHours).toBe(24);
     expect(merged.notificationsEnabled).toBe(true);
     expect(merged.theme).toBe('dark');

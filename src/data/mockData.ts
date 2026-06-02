@@ -1,8 +1,10 @@
 import type {
   CollectionSchedule,
   DisposalLocation,
+  SectorId,
   ServiceAlert,
   UserProfile,
+  WasteType,
 } from '../domain/types';
 
 export const pilotUser: UserProfile = {
@@ -10,92 +12,75 @@ export const pilotUser: UserProfile = {
   name: 'Felipe',
   email: 'felipe@ecoleta.app',
   city: 'Santo Ângelo',
-  neighborhood: 'Centro',
+  sectorId: 'sector-01',
   notificationLeadHours: 12,
   notificationsEnabled: false,
   theme: 'light',
 };
 
+interface ScheduleGroup {
+  sectorId: SectorId;
+  wasteType: WasteType;
+  weekdays: number[];
+  startHour: number;
+  startMinute?: number;
+}
+
+const weekdaySlugs = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+function buildSchedules({
+  sectorId,
+  wasteType,
+  weekdays,
+  startHour,
+  startMinute = 0,
+}: ScheduleGroup): CollectionSchedule[] {
+  return weekdays.map((weekday) => ({
+    id: `${sectorId}-${wasteType}-${weekdaySlugs[weekday]}`,
+    sectorId,
+    wasteType,
+    weekday,
+    startHour,
+    startMinute,
+    guidance:
+      wasteType === 'wet'
+        ? 'Separe o lixo úmido e disponibilize antes do início do turno indicado para seu setor.'
+        : 'Disponibilize recicláveis secos e limpos antes do início do turno indicado para seu setor.',
+  }));
+}
+
 export const collectionSchedules: CollectionSchedule[] = [
-  {
-    id: 'centro-wet',
-    neighborhood: 'Centro',
-    wasteType: 'wet',
-    weekday: 4,
-    startHour: 10,
-    guidance:
-      'Lixo úmido é recolhido pela Novo Mundo. Confirme o setor no mapa oficial da Prefeitura.',
-  },
-  {
-    id: 'centro-dry',
-    neighborhood: 'Centro',
-    wasteType: 'dry',
-    weekday: 5,
-    startHour: 10,
-    guidance:
-      'Lixo seco é recolhido pela Cooperativa Ecos do Verde. Materiais devem estar limpos.',
-  },
-  {
-    id: 'casaroto-wet',
-    neighborhood: 'Casaroto',
-    wasteType: 'wet',
-    weekday: 1,
-    startHour: 10,
-    guidance:
-      'Bairro listado no Setor 4 com coleta passando da madrugada para o dia a partir das 10h.',
-  },
-  {
-    id: 'casaroto-dry',
-    neighborhood: 'Casaroto',
-    wasteType: 'dry',
-    weekday: 4,
-    startHour: 10,
-    guidance:
-      'Separe papel, plástico, papelão, vidro, latinhas e embalagens limpas para a coleta seletiva.',
-  },
-  {
-    id: 'jardim-palmeiras-wet',
-    neighborhood: 'Jardim das Palmeiras',
-    wasteType: 'wet',
-    weekday: 2,
-    startHour: 10,
-    guidance:
-      'Restos de comida, erva-mate, papel higiênico e embalagens contaminadas vão no lixo úmido.',
-  },
-  {
-    id: 'jardim-palmeiras-dry',
-    neighborhood: 'Jardim das Palmeiras',
-    wasteType: 'dry',
-    weekday: 5,
-    startHour: 10,
-    guidance:
-      'Disponibilize recicláveis secos e limpos para facilitar a triagem da Ecos do Verde.',
-  },
-  {
-    id: 'missoes-wet',
-    neighborhood: 'Missoes',
-    wasteType: 'wet',
-    weekday: 2,
-    startHour: 10,
-    guidance:
-      'A mudança de turno vale para Missões ao norte da Av. Rio Grande do Sul.',
-  },
-  {
-    id: 'missoes-dry',
-    neighborhood: 'Missoes',
-    wasteType: 'dry',
-    weekday: 5,
-    startHour: 10,
-    guidance:
-      'Materiais recicláveis incluem papel, plástico, papelão, garrafas pet, vidro e latinhas.',
-  },
+  ...buildSchedules({ sectorId: 'sector-01', wasteType: 'wet', weekdays: [1, 2, 3, 4, 5, 6], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-01', wasteType: 'dry', weekdays: [1, 3, 5, 6], startHour: 19 }),
+  ...buildSchedules({ sectorId: 'sector-02', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-02', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 19 }),
+  ...buildSchedules({ sectorId: 'sector-03', wasteType: 'wet', weekdays: [2, 4, 6], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-03', wasteType: 'dry', weekdays: [1, 3, 5], startHour: 7 }),
+  ...buildSchedules({ sectorId: 'sector-04', wasteType: 'wet', weekdays: [2, 4, 6], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-04', wasteType: 'dry', weekdays: [1, 3, 5], startHour: 16, startMinute: 30 }),
+  ...buildSchedules({ sectorId: 'sector-05', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-05', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 7 }),
+  ...buildSchedules({ sectorId: 'sector-06', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 0 }),
+  ...buildSchedules({ sectorId: 'sector-06', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 7 }),
+  ...buildSchedules({ sectorId: 'sector-07', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-07', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 7 }),
+  ...buildSchedules({ sectorId: 'sector-08', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-08', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 16, startMinute: 30 }),
+  ...buildSchedules({ sectorId: 'sector-09', wasteType: 'wet', weekdays: [1, 3, 5], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-09', wasteType: 'dry', weekdays: [2, 4, 6], startHour: 16, startMinute: 30 }),
+  ...buildSchedules({ sectorId: 'sector-10', wasteType: 'wet', weekdays: [2, 4, 6], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-10', wasteType: 'dry', weekdays: [1, 3, 5], startHour: 16, startMinute: 30 }),
+  ...buildSchedules({ sectorId: 'sector-11', wasteType: 'wet', weekdays: [2, 4, 6], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-11', wasteType: 'dry', weekdays: [1, 3, 5], startHour: 7 }),
+  ...buildSchedules({ sectorId: 'sector-12', wasteType: 'wet', weekdays: [2, 4, 6], startHour: 10 }),
+  ...buildSchedules({ sectorId: 'sector-12', wasteType: 'dry', weekdays: [1, 3, 5], startHour: 7 }),
 ];
 
 export const disposalLocations: DisposalLocation[] = [
   {
     id: 'novo-mundo',
-    name: 'Novo Mundo',
-    address: 'Telefone/WhatsApp: (55) 3320-4044',
+    name: 'Empresa Novo Mundo',
+    address: 'Telefone: (55) 3320-4044',
     acceptedWaste: ['wet'],
     openingHours: 'Responsável pela coleta de lixo úmido',
     distanceKm: 0,
@@ -105,7 +90,7 @@ export const disposalLocations: DisposalLocation[] = [
   {
     id: 'ecos-do-verde',
     name: 'Cooperativa Ecos do Verde',
-    address: 'Telefone/WhatsApp: (55) 9.9134-0805',
+    address: 'Telefone: (55) 9.9134-0805',
     acceptedWaste: ['dry'],
     openingHours: 'Responsável pela coleta de lixo seco',
     distanceKm: 0,
@@ -114,7 +99,7 @@ export const disposalLocations: DisposalLocation[] = [
   },
   {
     id: 'secretaria-meio-ambiente',
-    name: 'Secretaria de Meio Ambiente e Desenvolvimento Urbano',
+    name: 'Secretaria de Meio Ambiente',
     address: 'Telefone: (55) 3312-0129',
     acceptedWaste: ['wet', 'dry'],
     openingHours: 'Dúvidas, sugestões ou reclamações sobre a coleta',
@@ -124,29 +109,4 @@ export const disposalLocations: DisposalLocation[] = [
   },
 ];
 
-export const serviceAlerts: ServiceAlert[] = [
-  {
-    id: 'turno-setores-4-5',
-    title: 'Mudança de turno em bairros dos setores 4 e 5',
-    message:
-      'Desde 11/11/2024, alguns bairros passaram da madrugada para coleta durante o dia a partir das 10h. Os horários seguem em experimentação.',
-    affectedNeighborhoods: [
-      'Casaroto',
-      'Jardim das Palmeiras',
-      'Jardim Residencial Sabo',
-      'Kurtz',
-      'Sossego (Centro Sul)',
-      'Wilde',
-      'Hortencia',
-      'Missoes',
-      'Olavo Reis',
-      'Padoim',
-      'Residencial Ipanema',
-      'Rosani',
-      'Sanches',
-      'Sao Carlos',
-    ],
-    startsAt: '2024-11-11T00:00:00.000Z',
-    endsAt: '2027-12-31T23:00:00.000Z',
-  },
-];
+export const serviceAlerts: ServiceAlert[] = [];

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { neighborhoodSchema } from '../domain/schemas';
+import { sectorIdSchema } from '../domain/schemas';
 import type { UserPreferences } from '../domain/types';
 
 function getStorageKey(userId: string) {
@@ -20,15 +20,15 @@ export async function loadUserPreferences(userId: string): Promise<Partial<UserP
 
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const neighborhood = parsed.neighborhood;
+    const sectorId = parsed.sectorId;
     const notificationLeadHours = parsed.notificationLeadHours;
     const notificationsEnabled = parsed.notificationsEnabled;
     const theme = parsed.theme;
 
     return {
-      neighborhood:
-        typeof neighborhood === 'string'
-          ? neighborhoodSchema.parse(neighborhood)
+      sectorId:
+        typeof sectorId === 'string'
+          ? sectorIdSchema.parse(sectorId)
           : undefined,
       notificationLeadHours: isLeadHours(notificationLeadHours)
         ? notificationLeadHours

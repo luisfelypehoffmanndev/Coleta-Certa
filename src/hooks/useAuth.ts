@@ -9,7 +9,7 @@ import {
 } from '../services/authService';
 import { clearSession, loadSession, saveSession } from '../services/sessionStorage';
 import { clearUserPreferences, saveUserPreferences } from '../services/preferencesStorage';
-import type { AuthSession, Neighborhood } from '../domain/types';
+import type { AuthSession, SectorId } from '../domain/types';
 
 interface AuthState {
   session: AuthSession | null;
@@ -44,7 +44,17 @@ export function useAuth() {
           error: null,
         });
       })
-      .catch(() => undefined);
+      .catch((error) => {
+        if (!mounted) {
+          return;
+        }
+
+        setState((current) => ({
+          ...current,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Falha ao carregar sessão local.',
+        }));
+      });
 
     const unsubscribe = subscribeToAuthState((session) => {
       if (!mounted) {
@@ -91,7 +101,7 @@ export function useAuth() {
     }
   }
 
-  async function signUp(name: string, email: string, password: string, neighborhood: Neighborhood) {
+  async function signUp(name: string, email: string, password: string, sectorId: SectorId) {
     setState((current) => ({
       ...current,
       isSubmitting: true,
@@ -101,7 +111,7 @@ export function useAuth() {
     try {
       const session = await signUpWithPassword(name, email, password);
       await saveUserPreferences(session.userId, {
-        neighborhood,
+        sectorId,
         notificationLeadHours: 12,
         notificationsEnabled: false,
         theme: 'light',

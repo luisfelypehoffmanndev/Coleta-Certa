@@ -3,7 +3,8 @@ import { Pressable, Text, View } from 'react-native';
 
 import { getAppStyles, getThemeColors } from '../ui/styles';
 import { iconLabels } from '../theme/tokens';
-import { getWasteLabel } from '../domain/schedule';
+import { WasteIcon } from '../components/WasteIcon';
+import { formatScheduleTime, getWasteLabel } from '../domain/schedule';
 import type { CollectionSchedule, UserProfile, WasteType } from '../domain/types';
 
 interface CalendarScreenProps {
@@ -18,18 +19,18 @@ interface CalendarDay {
   date: Date;
   dayNumber: number;
   inMonth: boolean;
-  wasteType?: WasteType;
+  wasteTypes: WasteType[];
 }
 
 function dayTextStyle(
-  type: WasteType | undefined,
+  types: WasteType[],
   colors: ReturnType<typeof getThemeColors>,
 ) {
-  if (type === 'wet') {
+  if (types.includes('wet')) {
     return { color: colors.wasteText.wet };
   }
 
-  if (type === 'dry') {
+  if (types.includes('dry')) {
     return { color: colors.wasteText.dry };
   }
 
@@ -37,39 +38,37 @@ function dayTextStyle(
 }
 
 function markerStyle(
-  type: WasteType | undefined,
+  types: WasteType[],
   colors: ReturnType<typeof getThemeColors>,
 ) {
-  if (type === 'wet') {
+  if (types.includes('wet')) {
     return { color: colors.wasteText.wet };
   }
 
-  if (type === 'dry') {
+  if (types.includes('dry')) {
     return { color: colors.wasteText.dry };
   }
 
   return { color: colors.textMuted };
 }
 
-function getWasteTextStyle(type: WasteType, styles: ReturnType<typeof getAppStyles>) {
-  if (type === 'dry') {
-    return styles.wasteBadgeTextCyan;
+function describeSchedules(schedules: CollectionSchedule[], wasteType: WasteType) {
+  const filtered = schedules.filter((item) => item.wasteType === wasteType);
+
+  if (!filtered.length) {
+    return 'Sem coleta programada';
   }
 
-  return undefined;
+  return `${filtered.map((item) => weekdayLabels[item.weekday]).join(', ')} - a partir das ${formatScheduleTime(filtered[0])}`;
 }
 
-function legendDetails(schedules: CollectionSchedule[], neighborhood: UserProfile['neighborhood']) {
-  const filtered = schedules.filter((item) => item.neighborhood === neighborhood);
+function legendDetails(schedules: CollectionSchedule[], sectorId: UserProfile['sectorId']) {
+  const filtered = schedules.filter((item) => item.sectorId === sectorId);
 
-  const wetDays = filtered.filter((item) => item.wasteType === 'wet').length
-    ? 'Conforme setor no mapa oficial - a partir das 10:00'
-    : 'Coleta programada';
-  const dryDays = filtered.filter((item) => item.wasteType === 'dry').length
-    ? 'Conforme setor no mapa oficial - a partir das 10:00'
-    : 'Coleta programada';
-
-  return { wetDays, dryDays };
+  return {
+    wetDays: describeSchedules(filtered, 'wet'),
+    dryDays: describeSchedules(filtered, 'dry'),
+  };
 }
 
 function addMonths(date: Date, delta: number) {
@@ -100,13 +99,15 @@ function buildCalendarRows(monthDate: Date, schedules: CollectionSchedule[]) {
     for (let day = 0; day < 7; day += 1) {
       const date = new Date(gridStart);
       date.setDate(gridStart.getDate() + week * 7 + day);
-      const match = schedules.find((schedule) => schedule.weekday === date.getDay());
+      const wasteTypes = schedules
+        .filter((schedule) => schedule.weekday === date.getDay())
+        .map((schedule) => schedule.wasteType);
 
       days.push({
         date,
         dayNumber: date.getDate(),
         inMonth: date.getMonth() === month,
-        wasteType: match?.wasteType,
+        wasteTypes,
       });
     }
 
@@ -136,24 +137,32 @@ export function CalendarScreen({
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1),
   );
-  const neighborhoodSchedules = useMemo(
-    () => collectionSchedules.filter((item) => item.neighborhood === user.neighborhood),
-    [collectionSchedules, user.neighborhood],
+  const sectorSchedules = useMemo(
+    () => collectionSchedules.filter((item) => item.sectorId === user.sectorId),
+    [collectionSchedules, user.sectorId],
   );
   const calendarRows = useMemo(
-    () => buildCalendarRows(visibleMonth, neighborhoodSchedules),
-    [visibleMonth, neighborhoodSchedules],
+    () => buildCalendarRows(visibleMonth, sectorSchedules),
+    [visibleMonth, sectorSchedules],
   );
   const collectionDays = useMemo(
-    () =>
-      calendarRows
+    () => {
+      const isCurrentMonth =
+        visibleMonth.getFullYear() === referenceDate.getFullYear() &&
+        visibleMonth.getMonth() === referenceDate.getMonth();
+      const listStartDate = isCurrentMonth
+        ? new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate())
+        : visibleMonth;
+
+      return calendarRows
         .flat()
-        .filter((day): day is CalendarDay & { wasteType: WasteType } => {
-          return day.inMonth && Boolean(day.wasteType);
-        }),
-    [calendarRows],
+        .filter((day) => day.inMonth && day.date >= listStartDate)
+        .flatMap((day) => day.wasteTypes.map((wasteType) => ({ ...day, wasteType })))
+        .slice(0, 4);
+    },
+    [calendarRows, referenceDate, visibleMonth],
   );
-  const { wetDays, dryDays } = legendDetails(collectionSchedules, user.neighborhood);
+  const { wetDays, dryDays } = legendDetails(collectionSchedules, user.sectorId);
   const monthLabel = getMonthLabel(visibleMonth);
 
   return (
@@ -197,20 +206,22 @@ export function CalendarScreen({
                 key={`${index}-${dayIndex}`}
                 style={[
                   styles.dayCell,
-                  day.wasteType && styles.dayCellCollection,
+                  Boolean(day.wasteTypes.length) && styles.dayCellCollection,
                   {
                     backgroundColor:
-                      day.inMonth && day.wasteType ? colors.waste[day.wasteType] : 'transparent',
+                      day.inMonth && day.wasteTypes.length
+                        ? colors.waste[day.wasteTypes[0]]
+                        : 'transparent',
                   },
                   !day.inMonth && styles.dayCellMuted,
                 ]}
               >
-                <Text style={[styles.dayNumber, dayTextStyle(day.wasteType, colors)]}>
+                <Text style={[styles.dayNumber, dayTextStyle(day.wasteTypes, colors)]}>
                   {day.dayNumber}
                 </Text>
-                {day.wasteType ? (
-                  <Text style={[styles.dayMarker, markerStyle(day.wasteType, colors)]}>
-                    {iconLabels[day.wasteType]}
+                {day.wasteTypes.length ? (
+                  <Text style={[styles.dayMarker, markerStyle(day.wasteTypes, colors)]}>
+                    {day.wasteTypes.map((type) => iconLabels[type]).join(' ')}
                   </Text>
                 ) : null}
               </View>
@@ -220,16 +231,16 @@ export function CalendarScreen({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitleSmall}>Dias de coleta no mês</Text>
+        <Text style={styles.sectionTitleSmall}>Próximas coletas do mês</Text>
         {collectionDays.length ? (
           <View style={styles.listBlock}>
             {collectionDays.map((day) => {
-              const schedule = neighborhoodSchedules.find(
+              const schedule = sectorSchedules.find(
                 (item) => item.weekday === day.date.getDay() && item.wasteType === day.wasteType,
               );
 
               return (
-                <View key={day.date.toISOString()} style={styles.scheduleCard}>
+                <View key={`${day.date.toISOString()}-${day.wasteType}`} style={styles.scheduleCard}>
                   <View style={styles.scheduleCardMain}>
                     <View
                       style={[
@@ -237,9 +248,7 @@ export function CalendarScreen({
                         { backgroundColor: colors.waste[day.wasteType] },
                       ]}
                     >
-                      <Text style={[styles.wasteBadgeText, getWasteTextStyle(day.wasteType, styles)]}>
-                        {iconLabels[day.wasteType]}
-                      </Text>
+                      <WasteIcon color={colors.wasteText[day.wasteType]} type={day.wasteType} />
                     </View>
                     <View style={styles.scheduleCardText}>
                       <Text style={styles.scheduleTitle}>{getWasteLabel(day.wasteType)}</Text>
@@ -247,7 +256,7 @@ export function CalendarScreen({
                     </View>
                   </View>
                   <Text style={styles.scheduleTime}>
-                    {String(schedule?.startHour ?? 10).padStart(2, '0')}:00
+                    {schedule ? formatScheduleTime(schedule) : '--:--'}
                   </Text>
                 </View>
               );
@@ -256,7 +265,7 @@ export function CalendarScreen({
         ) : (
           <View style={styles.noteCardInline}>
             <Text style={styles.noteText}>
-              Este bairro ainda não tem agenda local cadastrada no protótipo. Use o mapa oficial
+              Este setor ainda não tem agenda local cadastrada. Use o mapa oficial
               por endereço para confirmar o setor.
             </Text>
           </View>
@@ -270,7 +279,7 @@ export function CalendarScreen({
       <View style={styles.legendList}>
         <View style={styles.legendRow}>
           <View style={[styles.wasteBadge, { backgroundColor: colors.waste.wet }]}>
-            <Text style={styles.wasteBadgeText}>{iconLabels.wet}</Text>
+            <WasteIcon color={colors.wasteText.wet} type="wet" />
           </View>
           <View style={styles.legendMetaBlock}>
             <Text style={styles.legendTitle}>Lixo úmido</Text>
@@ -280,9 +289,7 @@ export function CalendarScreen({
 
         <View style={styles.legendRow}>
           <View style={[styles.wasteBadge, { backgroundColor: colors.waste.dry }]}>
-            <Text style={[styles.wasteBadgeText, styles.wasteBadgeTextCyan]}>
-              {iconLabels.dry}
-            </Text>
+            <WasteIcon color={colors.wasteText.dry} type="dry" />
           </View>
           <View style={styles.legendMetaBlock}>
             <Text style={styles.legendTitle}>Lixo seco</Text>

@@ -62,16 +62,18 @@ describe('App', () => {
     expect(await screen.findByText('Antecedência do lembrete: 1 hora')).toBeTruthy();
   });
 
-  it('shows the official map fallback when the selected neighborhood has no local schedule', async () => {
+  it('searches sectors by neighborhood and sector name', async () => {
     render(<App />);
 
     await signIn();
     fireEvent.press(await screen.findByText('Config'));
-    fireEvent.press(await screen.findByText('Sanches'));
-    fireEvent.press(screen.getByText('Início'));
+    fireEvent.press(await screen.findByLabelText('Alterar setor'));
+    fireEvent.changeText(await screen.findByLabelText('Pesquisar setor ou bairro'), 'Casaroto');
 
-    expect(await screen.findByText(/não tem agenda local confirmada/)).toBeTruthy();
-    expect(screen.getAllByText('Abrir mapa oficial →').length).toBeGreaterThan(0);
+    expect(await screen.findByText(/Casaroto, Jardim das Palmeiras/)).toBeTruthy();
+
+    fireEvent.changeText(screen.getByLabelText('Pesquisar setor ou bairro'), 'Setor 08');
+    expect(await screen.findByText(/Aeroporto, A.F.P.M., Aguiar/)).toBeTruthy();
   });
 
   it('lets the user enable collection reminders from the profile', async () => {

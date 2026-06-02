@@ -1,56 +1,42 @@
 export const wasteTypes = ['wet', 'dry'] as const;
+export const sectorIds = [
+  'sector-01',
+  'sector-02',
+  'sector-03',
+  'sector-04',
+  'sector-05',
+  'sector-06',
+  'sector-07',
+  'sector-08',
+  'sector-09',
+  'sector-10',
+  'sector-11',
+  'sector-12',
+] as const;
 
 export type WasteType = (typeof wasteTypes)[number];
 export type AppTheme = 'light' | 'dark';
+export type SectorId = (typeof sectorIds)[number];
 
-export type Neighborhood =
-  | 'Centro'
-  | 'Casaroto'
-  | 'Jardim das Palmeiras'
-  | 'Jardim Residencial Sabo'
-  | 'Kurtz'
-  | 'Sossego (Centro Sul)'
-  | 'Wilde'
-  | 'Hortencia'
-  | 'Missoes'
-  | 'Olavo Reis'
-  | 'Padoim'
-  | 'Residencial Ipanema'
-  | 'Rosani'
-  | 'Sanches'
-  | 'Sao Carlos';
-
-export const neighborhoods: Neighborhood[] = [
-  'Centro',
-  'Casaroto',
-  'Jardim das Palmeiras',
-  'Jardim Residencial Sabo',
-  'Kurtz',
-  'Sossego (Centro Sul)',
-  'Wilde',
-  'Hortencia',
-  'Missoes',
-  'Olavo Reis',
-  'Padoim',
-  'Residencial Ipanema',
-  'Rosani',
-  'Sanches',
-  'Sao Carlos',
-];
+export interface CollectionSector {
+  id: SectorId;
+  name: string;
+  neighborhoods: string[];
+}
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   city: string;
-  neighborhood: Neighborhood;
+  sectorId: SectorId;
   notificationLeadHours: number;
   notificationsEnabled: boolean;
   theme: AppTheme;
 }
 
 export interface UserPreferences {
-  neighborhood: Neighborhood;
+  sectorId: SectorId;
   notificationLeadHours: number;
   notificationsEnabled: boolean;
   theme: AppTheme;
@@ -65,10 +51,11 @@ export interface AuthSession {
 
 export interface CollectionSchedule {
   id: string;
-  neighborhood: Neighborhood;
+  sectorId: SectorId;
   wasteType: WasteType;
   weekday: number;
   startHour: number;
+  startMinute: number;
   guidance: string;
 }
 
@@ -87,7 +74,7 @@ export interface ServiceAlert {
   id: string;
   title: string;
   message: string;
-  affectedNeighborhoods: Neighborhood[];
+  affectedSectorIds: SectorId[];
   startsAt: string;
   endsAt: string;
 }
