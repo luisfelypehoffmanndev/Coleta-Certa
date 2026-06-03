@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SectorPicker } from '../components/SectorPicker';
 import type { SectorId } from '../domain/types';
@@ -23,6 +24,7 @@ interface LoginScreenProps {
 type AuthMode = 'signIn' | 'signUp';
 
 export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginScreenProps) {
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,7 +36,10 @@ export function LoginScreen({ error, isSubmitting, onSignIn, onSignUp }: LoginSc
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.loginKeyboardAvoider}
+      style={[
+        styles.loginKeyboardAvoider,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
     >
       <ScrollView
         contentContainerStyle={styles.loginWrap}

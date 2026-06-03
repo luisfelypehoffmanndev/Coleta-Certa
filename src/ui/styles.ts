@@ -1,9 +1,7 @@
-import { StatusBar, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { colors as lightColors, darkColors, radii, spacing, typography } from '../theme/tokens';
 import type { AppTheme } from '../domain/types';
-
-const statusBarInset = (StatusBar.currentHeight ?? 0) + 4;
 
 function createAppStyles(colors: typeof lightColors) {
   return StyleSheet.create({
@@ -30,14 +28,14 @@ function createAppStyles(colors: typeof lightColors) {
   topHeader: {
     backgroundColor: colors.primaryDark,
     paddingHorizontal: 18,
-    paddingTop: statusBarInset + spacing.md,
+    paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     gap: 6,
   },
   topHeaderHero: {
     backgroundColor: colors.backgroundAccent,
     paddingHorizontal: 18,
-    paddingTop: statusBarInset + 12,
+    paddingTop: 12,
     paddingBottom: 14,
     gap: spacing.xs,
   },
@@ -702,7 +700,7 @@ function createAppStyles(colors: typeof lightColors) {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 18,
-    paddingTop: statusBarInset + spacing.lg,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
     backgroundColor: colors.backgroundAccent,
@@ -731,7 +729,6 @@ function createAppStyles(colors: typeof lightColors) {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 18,
-    paddingTop: statusBarInset,
     backgroundColor: colors.backgroundAccent,
   },
   loadingCard: {

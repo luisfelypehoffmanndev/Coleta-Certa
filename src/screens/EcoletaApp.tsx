@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { buildUpcomingCollections, getActiveAlerts, getNextCollection } from '../domain/schedule';
 import { AppIcon, type AppIconName } from '../components/AppIcon';
@@ -44,6 +45,7 @@ function TabIcon({
 }
 
 export function EcoletaApp() {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const {
     session,
@@ -98,7 +100,7 @@ export function EcoletaApp() {
 
   if (isAuthLoading) {
     return (
-      <View style={styles.loadingWrap}>
+      <View style={[styles.loadingWrap, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <StatusBar style="dark" />
         <View style={styles.loadingCard}>
           <Text style={styles.eyebrow}>Coleta Certa</Text>
@@ -124,7 +126,7 @@ export function EcoletaApp() {
 
   if (isLoading || !user) {
     return (
-      <View style={styles.loadingWrap}>
+      <View style={[styles.loadingWrap, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <StatusBar style="dark" />
         <View style={styles.loadingCard}>
           <Text style={styles.eyebrow}>Coleta Certa</Text>
@@ -141,7 +143,7 @@ export function EcoletaApp() {
   }
 
   return (
-    <View style={styles.shell}>
+    <View style={[styles.shell, { paddingTop: insets.top }]}>
       <StatusBar style={user.theme === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -198,7 +200,7 @@ export function EcoletaApp() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { paddingBottom: 14 + insets.bottom }]}>
         {tabs.map((tab) => {
           const selected = tab.key === activeTab;
           return (
